@@ -27,8 +27,8 @@ string Message::getDecryptedContent(const string &privateKey) const {
 }
 
 void Message::displayMessage() const {
-    cout << "From: " << sender.getUsername() 
-              << ", To: " << receiver.getUsername() 
-              << ", Timestamp: " << ctime(&timestamp)
-              << ", Encrypted Content: " << content << endl;
+    cout << "From: " << sender.getUsername()
+    << ", To: " << receiver.getUsername()
+    << ", Timestamp: " << ctime(&timestamp)
+    << ", Encrypted Content: " << content << endl;
 }
