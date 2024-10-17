@@ -21,7 +21,7 @@ networking::~networking() {
 }
 
 // send message function
-void networking::sendMessage(const QString& message) {
+void networking::sendMessage(Message &message) {
     // use whatever address the webserver is hosted on (localhost for testing)
     QUrl url(QStringLiteral("ws://localhost:12345"));
 
@@ -30,8 +30,10 @@ void networking::sendMessage(const QString& message) {
 
     // once connected, send the message content
     connect(m_webSocket, &QWebSocket::connected, [this, message]() {
-        m_webSocket->sendTextMessage(message);
-        std::cout << "Sent message: " << message.toStdString() << std::endl;
+        QString encryptedMessage = QString::fromStdString(message.getEncryptedContent());
+        m_webSocket->sendTextMessage(encryptedMessage);
+        //This line below commented out was giving me a segmentation fault for some reason
+        // std::cout << "Sent message: " << message.toStdString() << std::endl;
     });
 }
 

@@ -8,8 +8,8 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     // for testing websockets
-    networking net;
-    net.sendMessage("test message");
+    // networking net;
+    // net.sendMessage("Start from main");
 
     MainWindow w;
     w.show();
