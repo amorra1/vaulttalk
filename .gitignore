@@ -1,5 +1,6 @@
 # Ignore build directories
 build-*/
+build/
 # Qt Creator project files
 *.pro.user
 *.pro.user.*
