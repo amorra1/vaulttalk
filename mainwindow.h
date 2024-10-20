@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QStackedWidget>
 #include "networking.h"
 #include "user.h"
 #include "message.h"
@@ -20,9 +21,14 @@ public:
 
 private slots:
     void onSendButtonClicked();
+    void goToMain();
+    void goToSettings();
+    void login();
+
 
 private:
     Ui::MainWindow *ui;
+    QStackedWidget *stackedWidget;
     networking network;
 };
 

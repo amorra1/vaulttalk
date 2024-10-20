@@ -1,18 +1,23 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QVBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    //, stackedWidget(new QStackedWidget(this))
 {
     ui->setupUi(this);
+    ui->stackedWidget->setCurrentIndex(0);
 
-    ui->senderInput->setPlaceholderText("Sender");
-    ui->receiverInput->setPlaceholderText("Reveiver");
-    ui->messageInput->setPlaceholderText("Type message here");
 
+    // Connect buttons to switch between pages
+    connect(ui->loginButton, &QPushButton::clicked, this, &MainWindow::login);
+    connect(ui->homeButton, &QPushButton::clicked, this, &MainWindow::goToMain);
+    connect(ui->settingsButton, &QPushButton::clicked, this, &MainWindow::goToSettings);
     connect(ui->sendButton, &QPushButton::clicked, this, &MainWindow::onSendButtonClicked);
 }
 
@@ -31,4 +36,13 @@ void MainWindow::onSendButtonClicked() {
     // QString text = QString::fromStdString(msg.getEncryptedContent());
 
     network.sendMessage(msg);
+}
+void MainWindow::login() {
+    ui->stackedWidget->setCurrentIndex(1);
+}
+void MainWindow::goToMain() {
+    ui->stackedWidget->setCurrentIndex(1);
+}
+void MainWindow::goToSettings() {
+    ui->stackedWidget->setCurrentIndex(2);
 }
