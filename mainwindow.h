@@ -24,6 +24,7 @@ private slots:
     void goToMain();
     void goToSettings();
     void login();
+    void logout();
 
 
 private:

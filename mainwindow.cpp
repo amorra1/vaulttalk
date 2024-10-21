@@ -13,11 +13,18 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     ui->stackedWidget->setCurrentIndex(0);
 
+    ui->usernameInput->setPlaceholderText("Username");
+    ui->passwordInput->setPlaceholderText("Password");
+    ui->messageInput->setPlaceholderText("Type message here...");
+    ui->senderInput->setPlaceholderText("Sender");
+    ui->receiverInput->setPlaceholderText("Receiver");
+
 
     // Connect buttons to switch between pages
     connect(ui->loginButton, &QPushButton::clicked, this, &MainWindow::login);
     connect(ui->homeButton, &QPushButton::clicked, this, &MainWindow::goToMain);
     connect(ui->settingsButton, &QPushButton::clicked, this, &MainWindow::goToSettings);
+    connect(ui->logOutButton, &QPushButton::clicked, this, &MainWindow::logout);
     connect(ui->sendButton, &QPushButton::clicked, this, &MainWindow::onSendButtonClicked);
 }
 
@@ -45,4 +52,7 @@ void MainWindow::goToMain() {
 }
 void MainWindow::goToSettings() {
     ui->stackedWidget->setCurrentIndex(2);
+}
+void MainWindow::logout() {
+    ui->stackedWidget->setCurrentIndex(0);
 }
