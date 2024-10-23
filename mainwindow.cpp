@@ -34,8 +34,8 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::onSendButtonClicked() {
-    User sender("testSenderID", ui->senderInput->text().toStdString(), "111");
-    User receiver("testReceiverID", ui->receiverInput->text().toStdString(), "222");
+    User sender("testSenderID", ui->senderInput->text().toStdString(), std::string("111"), std::string("hashedpassword1"));
+    User receiver("testReceiverID", ui->receiverInput->text().toStdString(), std::string("222"), std::string("hashedpassword2"));
     std::string content = ui->messageInput->text().toStdString();
 
     Message msg(sender, receiver, content);

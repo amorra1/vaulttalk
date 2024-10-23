@@ -10,6 +10,7 @@ using namespace std;
 
 class User {
 public:
+    User(); // Default constructor
     User(std::string id, std::string name, std::string pubKey, std::string hashedPassword);
 
     std::string getUserId() const;
