@@ -3,48 +3,117 @@
 #include <math.h>
 #include <random>
 #include <bitset>
-#include <gmpxx.h>
 
 #include "encryption.h"
 
 using namespace encryption;
 
+#define MAX_PRIME 10;
+#define MAX_E 10;
+
 // Function prototypes used in encryption.cpp.
 // NOTE: THESE ARE ONLY MEANT TO BE USED AS HELPER FUNCTIONS AS OF THE CURRENT VERSION.
 
-mpz_class GeneratePrime(int bitSize);
-bool CheckCoPrime(mpz_class a, mpz_class b);
-mpz_class ModInverse(mpz_class a, mpz_class m);
+int GCD(int a, int b);
+int GeneratePrime(int a = 0, int b = 0);
+bool CheckPrime(int x);
+bool CheckCoPrime(int a, int b);
+int ModInverse(int a, int m);
 
-// Generate a random prime number.
+// Finds the greatest common devisor of two numbers.
 
-mpz_class GeneratePrime(int bitSize) {
+int GCD(int a, int b) {
 
-    mpz_class random;
-    mpz_class prime;
+    int gcd = 1;
 
-    gmp_randstate_t state;
-    gmp_randinit_default(state);
-    gmp_randseed_ui(state, time(NULL));
+    for (int i = 1; i <= a; i++) {
 
-    mpz_urandomb(random.get_mpz_t(), state, bitSize);
+        if (a % i == 0 && b % i == 0) {
 
-    mpz_nextprime(prime.get_mpz_t(), random.get_mpz_t());
+            gcd = i;
 
-    gmp_randclear(state);
+        }
+    }
 
-    return prime;
+    return gcd;
+}
+
+// Generates two prime numbers. Returns an array of size 2*sizeof(int).
+// Has optional arguments specifying range. By default range is 1 to 256.
+
+int GeneratePrime(int a, int b) {
+
+    int x;
+    int y;
+
+    if (a == 0 && b == 0) {
+
+        x = 1;
+        y = MAX_PRIME;
+
+    } else if (a != 0 && b == 0) {
+
+        x = a;
+        y = MAX_PRIME;
+
+    }
+    
+    else {
+
+        x = a;
+        y = b;
+        
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dis(x, y);
+
+    while (true) {
+
+        int currentNum = dis(gen);
+
+        bool isPrime = CheckPrime(currentNum);
+
+        if (isPrime) {
+
+            return currentNum;
+
+        }
+    }
+}
+
+// Checks if a number is prime.
+
+bool CheckPrime(int x) {
+
+    if (x == 1 || x == 2) {
+
+        return false;
+
+    }
+
+    float sr = sqrt(x);
+
+    for (int i = 2; i <= sr; i++) {
+
+        if (x % i == 0) {
+            
+            return false;
+
+        }
+    }
+
+    return true;
 
 }
 
 // Checks if two numbers are coprime.
 // in the arguments, a is meant to be manually entered as the smaller of the two numbers. 
 
-bool CheckCoPrime(mpz_class a, mpz_class b) {
+bool CheckCoPrime(int a, int b) {
 
-    mpz_class result = gcd(a, b);
-
-    if (result != 1) {
+    if (GCD(a, b) != 1) {
 
         return false;
 
@@ -56,7 +125,7 @@ bool CheckCoPrime(mpz_class a, mpz_class b) {
 
 // Hlper function for ModInverse().
 
-mpz_class ExtendedGCD(mpz_class a, mpz_class b, mpz_class& x, mpz_class& y) {
+int ExtendedGCD(int a, int b, int& x, int& y) {
 
     if (b == 0) {
 
@@ -68,8 +137,8 @@ mpz_class ExtendedGCD(mpz_class a, mpz_class b, mpz_class& x, mpz_class& y) {
 
     // To store results of recursive call
 
-    mpz_class x1, y1; 
-    mpz_class gcd = ExtendedGCD(b, a % b, x1, y1);
+    int x1, y1; 
+    int gcd = ExtendedGCD(b, a % b, x1, y1);
 
     x = y1;
     y = x1 - (a / b) * y1;
@@ -79,12 +148,12 @@ mpz_class ExtendedGCD(mpz_class a, mpz_class b, mpz_class& x, mpz_class& y) {
 
 // Function to find modular multiplicative inverse
 
-mpz_class ModInverse(mpz_class a, mpz_class m) {
+int ModInverse(int a, int m) {
 
-    mpz_class x, y;
-    mpz_class gcd = ExtendedGCD(a, m, x, y);
+    int x, y;
+    int gcd = ExtendedGCD(a, m, x, y);
   
-    mpz_class res = (x % m + m) % m;
+    int res = (x % m + m) % m;
     return res;
     
 }
@@ -93,15 +162,15 @@ RSA_keys encryption::GenerateKeys(){
 
     std::cout << "Generating primes..." << std::endl;
 
-    mpz_class primes[2];
+    int primes[2];
 
-    primes[0] = GeneratePrime(512);
-    primes[1] = GeneratePrime(512);
+    primes[0] = GeneratePrime();
+    primes[1] = GeneratePrime();
 
-    mpz_class modulus = primes[0] * primes[1];
-    mpz_class phi = (primes[1] - 1) * (primes[0] - 1);
-    mpz_class e = 3;
-    mpz_class d;
+    long long modulus = primes[0] * primes[1];
+    long long phi = (primes[1] - 1) * (primes[0] - 1);
+    long long e = 3;
+    long long d;
 
     std::cout << "Checking if default e is valid..." << std::endl;
 
@@ -113,9 +182,9 @@ RSA_keys encryption::GenerateKeys(){
 
             // GeneratePrime accepts the lower range as an arguement. In this case it is e.
 
-            mpz_class newPrime;
+            int maxe = MAX_E;
 
-            mpz_nextprime(newPrime.get_mpz_t(), e.get_mpz_t());
+            int newPrime = GeneratePrime(e, maxe);
 
             if (CheckCoPrime(newPrime, phi)) {
 
@@ -151,79 +220,79 @@ RSA_keys encryption::GenerateKeys(){
 
 // Currently the best version of RSA encryption we can create. Libraries are needed to handle the size of the numbers used.
 
-//mpz_class encryption::RSA_Encrypt(std::string inputMsg, RSA_keys keys) {
-//
-//    std::string bitString = "";
-//
-//    for (size_t i = 0; i < inputMsg.size(); i++) {
-//
-//        std::bitset<8> tempBits = std::bitset<8>(inputMsg[i]);
-//
-//        std::string tempString = tempBits.to_string();
-//
-//        for (size_t i = 0; i < tempString.size(); i++) {
-//
-//            bitString.push_back(tempString[i]);
-//
-//        }
-//
-//    }
-//
-//    std::cout << std::endl << "Generating binary representation of string..." << std::endl;
-//    std::cout << bitString << std::endl;
-//    std::cout << std::endl << "Generating decimal representation..." << std::endl;
-//
-//    int decVal = 0;
-//    int max_exp = bitString.size() - 1;
-//    
-//    for (int i = 0; i < bitString.size(); i++) {
-//
-//        if (bitString[i] == '1') {
-//
-//            decVal += pow(2, max_exp);
-//
-//        }
-//
-//        max_exp--;
-//
-//    }
-//
-//    std::cout << decVal << std::endl;
-//    std::cout << std::endl << "Generating final encrypted message..." << std::endl;
-//
-//    unsigned long long tempPowVal = pow(decVal, keys.publicKey[1]);
-//    unsigned long long encrypted = tempPowVal % keys.publicKey[0];
-//
-//    std::cout << encrypted << std::endl;
-//
-//    return encrypted;
-//
-//}
+unsigned long long encryption::RSA_Encrypt(std::string inputMsg, RSA_keys keys) {
+
+    std::string bitString = "";
+
+    for (size_t i = 0; i < inputMsg.size(); i++) {
+
+        std::bitset<8> tempBits = std::bitset<8>(inputMsg[i]);
+
+        std::string tempString = tempBits.to_string();
+
+        for (size_t i = 0; i < tempString.size(); i++) {
+
+            bitString.push_back(tempString[i]);
+
+        }
+
+    }
+
+    std::cout << std::endl << "Generating binary representation of string..." << std::endl;
+    std::cout << bitString << std::endl;
+    std::cout << std::endl << "Generating decimal representation..." << std::endl;
+
+    int decVal = 0;
+    int max_exp = bitString.size() - 1;
+    
+    for (int i = 0; i < bitString.size(); i++) {
+
+        if (bitString[i] == '1') {
+
+            decVal += pow(2, max_exp);
+
+        }
+
+        max_exp--;
+
+    }
+
+    std::cout << decVal << std::endl;
+    std::cout << std::endl << "Generating final encrypted message..." << std::endl;
+
+    unsigned long long tempPowVal = pow(decVal, keys.publicKey[1]);
+    unsigned long long encrypted = tempPowVal % keys.publicKey[0];
+
+    std::cout << encrypted << std::endl;
+
+    return encrypted;
+
+}
 
 // The RSA decryption algorithm is currently unfinished. The numbers are overflowing even an unsigned long long.
 // See RSA_Encrypt for explanation on fix. 
 
-//std::string encryption::RSA_Decrypt(unsigned long long inputValue, RSA_keys keys) {
-//
-//    std::cout << std::endl << "Message recieved: " << std::endl;
-//    std::cout << inputValue << std::endl;
-//
-//    std::cout << std::endl << "Decrypting message..." << std::endl;
-//
-//    unsigned long long tempPowVal = pow(inputValue, keys.privateKey[1]);
-//
-//    unsigned long long decrypted = tempPowVal % keys.privateKey[0];
-//
-//    std::cout << std::endl << "The decimal representation of the message is: " << std::endl;
-//    std::cout << decrypted << std::endl;
-//
-//    std::cout << "Converting decimal to binary..." << std::endl;
-//
-//    std::string binVal = std::bitset<16>(decrypted).to_string();
-//
-//    std::cout << std::endl << "The binary representation of the message is: " << std::endl;
-//    std::cout << binVal << std::endl;
-//
-//    return "Temp";
-//
-//}
+std::string encryption::RSA_Decrypt(unsigned long long inputValue, RSA_keys keys) {
+
+    std::cout << std::endl << "Message recieved: " << std::endl;
+    std::cout << inputValue << std::endl;
+
+    std::cout << std::endl << "Decrypting message..." << std::endl;
+
+    unsigned long long tempPowVal = pow(inputValue, keys.privateKey[1]);
+
+    unsigned long long decrypted = tempPowVal % keys.privateKey[0];
+
+    std::cout << std::endl << "The decimal representation of the message is: " << std::endl;
+    std::cout << decrypted << std::endl;
+
+    std::cout << "Converting decimal to binary..." << std::endl;
+
+    std::string binVal = std::bitset<16>(decrypted).to_string();
+
+    std::cout << std::endl << "The binary representation of the message is: " << std::endl;
+    std::cout << binVal << std::endl;
+
+    return "Temp";
+
+}
