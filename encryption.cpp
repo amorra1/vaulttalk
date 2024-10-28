@@ -160,7 +160,7 @@ int ModInverse(int a, int m) {
 
 RSA_keys encryption::GenerateKeys(){
 
-    std::cout << "Generating primes..." << std::endl;
+    // std::cout << "Generating primes..." << std::endl;
 
     int primes[2];
 
@@ -172,11 +172,11 @@ RSA_keys encryption::GenerateKeys(){
     long long e = 3;
     long long d;
 
-    std::cout << "Checking if default e is valid..." << std::endl;
+    // std::cout << "Checking if default e is valid..." << std::endl;
 
     if (!CheckCoPrime(e, phi)) {
 
-        std::cout << "e is not valid. Regenerating to new coprime value..." << std::endl;
+        // std::cout << "e is not valid. Regenerating to new coprime value..." << std::endl;
 
         while (true) {
 
@@ -188,7 +188,7 @@ RSA_keys encryption::GenerateKeys(){
 
             if (CheckCoPrime(newPrime, phi)) {
 
-                std::cout << "New e is: " << newPrime << std::endl;
+                // std::cout << "New e is: " << newPrime << std::endl;
 
                 e = newPrime;
                 break;
@@ -196,7 +196,7 @@ RSA_keys encryption::GenerateKeys(){
         }
     }
 
-    std::cout << "Generating d... " << std::endl;
+    // std::cout << "Generating d... " << std::endl;
 
     d = ModInverse(e, phi);
 
@@ -208,11 +208,11 @@ RSA_keys encryption::GenerateKeys(){
     keys.privateKey[0] = modulus;
     keys.privateKey[1] = d;
 
-    std::cout << std::endl << "Generated Primes: " << primes[0] << " and " << primes[1] << std::endl;
-    std::cout << "Modulus: " << modulus << std::endl;
-    std::cout << "Phi: " << phi << std::endl;
-    std::cout << "E: " << e << std::endl;
-    std::cout << "D: " << d << std::endl;
+    // std::cout << std::endl << "Generated Primes: " << primes[0] << " and " << primes[1] << std::endl;
+    // std::cout << "Modulus: " << modulus << std::endl;
+    // std::cout << "Phi: " << phi << std::endl;
+    // std::cout << "E: " << e << std::endl;
+    // std::cout << "D: " << d << std::endl;
 
     return keys;
 
@@ -238,9 +238,9 @@ unsigned long long encryption::RSA_Encrypt(std::string inputMsg, RSA_keys keys) 
 
     }
 
-    std::cout << std::endl << "Generating binary representation of string..." << std::endl;
-    std::cout << bitString << std::endl;
-    std::cout << std::endl << "Generating decimal representation..." << std::endl;
+    // std::cout << std::endl << "Generating binary representation of string..." << std::endl;
+    // std::cout << bitString << std::endl;
+    // std::cout << std::endl << "Generating decimal representation..." << std::endl;
 
     int decVal = 0;
     int max_exp = bitString.size() - 1;
@@ -257,13 +257,13 @@ unsigned long long encryption::RSA_Encrypt(std::string inputMsg, RSA_keys keys) 
 
     }
 
-    std::cout << decVal << std::endl;
-    std::cout << std::endl << "Generating final encrypted message..." << std::endl;
+    // std::cout << decVal << std::endl;
+    // std::cout << std::endl << "Generating final encrypted message..." << std::endl;
 
     unsigned long long tempPowVal = pow(decVal, keys.publicKey[1]);
     unsigned long long encrypted = tempPowVal % keys.publicKey[0];
 
-    std::cout << encrypted << std::endl;
+    // std::cout << encrypted << std::endl;
 
     return encrypted;
 
@@ -274,24 +274,24 @@ unsigned long long encryption::RSA_Encrypt(std::string inputMsg, RSA_keys keys) 
 
 std::string encryption::RSA_Decrypt(unsigned long long inputValue, RSA_keys keys) {
 
-    std::cout << std::endl << "Message recieved: " << std::endl;
-    std::cout << inputValue << std::endl;
+    // std::cout << std::endl << "Message recieved: " << std::endl;
+    // std::cout << inputValue << std::endl;
 
-    std::cout << std::endl << "Decrypting message..." << std::endl;
+    // std::cout << std::endl << "Decrypting message..." << std::endl;
 
     unsigned long long tempPowVal = pow(inputValue, keys.privateKey[1]);
 
     unsigned long long decrypted = tempPowVal % keys.privateKey[0];
 
-    std::cout << std::endl << "The decimal representation of the message is: " << std::endl;
-    std::cout << decrypted << std::endl;
+    // std::cout << std::endl << "The decimal representation of the message is: " << std::endl;
+    // std::cout << decrypted << std::endl;
 
-    std::cout << "Converting decimal to binary..." << std::endl;
+    // std::cout << "Converting decimal to binary..." << std::endl;
 
     std::string binVal = std::bitset<16>(decrypted).to_string();
 
-    std::cout << std::endl << "The binary representation of the message is: " << std::endl;
-    std::cout << binVal << std::endl;
+    // std::cout << std::endl << "The binary representation of the message is: " << std::endl;
+    // std::cout << binVal << std::endl;
 
     return "Temp";
 
