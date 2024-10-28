@@ -18,7 +18,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->messageInput->setPlaceholderText("Type message here...");
     ui->senderInput->setPlaceholderText("Sender");
     ui->receiverInput->setPlaceholderText("Receiver");
+    ui->messageDisplay->setReadOnly(true);
 
+    ui->passwordInput->setEchoMode(QLineEdit::Password);
 
     // Connect buttons to switch between pages
     connect(ui->loginButton, &QPushButton::clicked, this, &MainWindow::login);
@@ -43,6 +45,11 @@ void MainWindow::onSendButtonClicked() {
     // QString text = QString::fromStdString(msg.getEncryptedContent());
 
     network.sendMessage(msg);
+
+    if(!content.empty()){
+        ui->messageDisplay->append("You: " + QString::fromStdString(content));
+        ui->messageInput->clear();
+    }
 }
 void MainWindow::login() {
     ui->stackedWidget->setCurrentIndex(1);
@@ -54,5 +61,10 @@ void MainWindow::goToSettings() {
     ui->stackedWidget->setCurrentIndex(2);
 }
 void MainWindow::logout() {
+    ui->passwordInput->clear();
+    if(!(ui->rememberMeCheck->isChecked())){
+        ui->usernameInput->clear();
+    }
+
     ui->stackedWidget->setCurrentIndex(0);
 }

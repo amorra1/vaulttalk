@@ -79,6 +79,19 @@
        <string>VaultTalk</string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="rememberMeCheck">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>350</y>
+        <width>121</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Remember Me?</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="mainPage">
      <widget class="QLineEdit" name="receiverInput">
@@ -148,6 +161,16 @@
       </property>
       <property name="text">
        <string>Log Out</string>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="messageDisplay">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>60</y>
+        <width>581</width>
+        <height>291</height>
+       </rect>
       </property>
      </widget>
     </widget>
