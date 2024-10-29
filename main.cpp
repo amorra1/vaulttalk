@@ -15,9 +15,9 @@ int main(int argc, char *argv[])
 
     std::string testMsg = "Yo";
 
-    RSA_keys keys = encryption::GenerateKeys();
-    unsigned long long encrypted = encryption::RSA_Encrypt(testMsg, keys);
-    string decrypted = encryption::RSA_Decrypt(encrypted, keys);
+    // RSA_keys keys = encryption::GenerateKeys();
+    // unsigned long long encrypted = encryption::RSA_Encrypt(testMsg, keys);
+    // string decrypted = encryption::RSA_Decrypt(encrypted, keys);
 
     MainWindow w;
     w.show();
