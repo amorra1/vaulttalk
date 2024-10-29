@@ -105,6 +105,12 @@ void MainWindow::goToSettings() {
     ui->stackedWidget->setCurrentIndex(3);
 }
 void MainWindow::logout() {
+    //clear register fields
+    ui->signUpUsernameInput->clear();
+    ui->signUpPasswordInput->clear();
+    ui->signUpConfirmPassusernameInput->clear();
+
+    // clear login fields unless remember me is checked
     ui->passwordInput->clear();
     if(!(ui->rememberMeCheck->isChecked())){
         ui->usernameInput->clear();
@@ -123,7 +129,11 @@ void MainWindow::registerUser() {
     QString password = ui->signUpPasswordInput->text();
     if(ui->signUpPasswordInput->text() != ui->signUpConfirmPassusernameInput->text()){
         QMessageBox::critical(nullptr, "Error", "Passwords do not match");
-    } else {
+    }else if(ui->signUpUsernameInput->text() == ""){
+        QMessageBox::critical(nullptr, "Error", "Please enter a username");
+    }else if(ui->signUpPasswordInput->text() == ""){
+        QMessageBox::critical(nullptr, "Error", "Please enter a password");
+    }else {
         passwordMatch = true;
     }
 
