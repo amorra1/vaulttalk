@@ -25,7 +25,7 @@ public:
 
 //to be implemented in encryption folder, these methods may just call other methods to encrypt/decrypt that
 //way we can call encrypt on the message content and decrypt on the message content
-string encryptMessage(const string &message, const string &publicKey);
-string decryptMessage(const string &encryptedMessage, const string &privateKey);
+string encryptMessage(const string &message);
+string decryptMessage(const string &encryptedMessage);
 
 #endif //MESSAGE_H
