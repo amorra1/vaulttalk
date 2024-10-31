@@ -11,6 +11,7 @@
 #include <QJsonDocument>
 #include <QUrl>
 #include <QMessageBox>
+#include "user.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -56,8 +57,8 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::onSendButtonClicked() {
-    User sender("testSenderID", ui->senderInput->text().toStdString(), std::string("111"), std::string("hashedpassword1"));
-    User receiver("testReceiverID", ui->receiverInput->text().toStdString(), std::string("222"), std::string("hashedpassword2"));
+    User sender(ui->senderInput->text().toStdString(), "testPassword");
+    User receiver(ui->receiverInput->text().toStdString(), "testPassword");
     std::string content = ui->messageInput->text().toStdString();
 
     Message msg(sender, receiver, content);
@@ -72,30 +73,20 @@ void MainWindow::onSendButtonClicked() {
     }
 }
 void MainWindow::login() {
-    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
-
+    //get inputs
     QString username = ui->usernameInput->text();
     QString password = ui->passwordInput->text();
 
-    //create json object
-    QJsonObject json;
-    json["username"] = username;
-    json["password"] = password;
-    QJsonDocument jsonDoc(json);
-
-    QNetworkRequest request(QUrl("http://127.0.0.1:8000/login"));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
-
-    //reply
-    connect(reply, &QNetworkReply::finished, [this, reply]() {
-        if (reply->error() == QNetworkReply::NoError) {
+    //create user object and login
+    User user(username.toStdString(), password.toStdString());
+    user.loginUser(user, [this](bool success) {
+        if (success) {
+            qDebug() << "Callback: Login was successful!";
             ui->stackedWidget->setCurrentIndex(1);
         } else {
-            QMessageBox::critical(this, "Error", "Login failed: " + reply->errorString());
+            qDebug() << "Callback: Login failed.";
+            QMessageBox::critical(this, "Error", "Login failed: ");
         }
-        reply->deleteLater();
     });
 }
 void MainWindow::goToMain() {
@@ -122,11 +113,11 @@ void MainWindow::Register() {
     ui->stackedWidget->setCurrentIndex(2);
 }
 void MainWindow::registerUser() {
-    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
-
     bool passwordMatch = false;
     QString username = ui->signUpUsernameInput->text();
     QString password = ui->signUpPasswordInput->text();
+
+    //user input error handling
     if(ui->signUpPasswordInput->text() != ui->signUpConfirmPassusernameInput->text()){
         QMessageBox::critical(nullptr, "Error", "Passwords do not match");
     }else if(ui->signUpUsernameInput->text() == ""){
@@ -137,27 +128,9 @@ void MainWindow::registerUser() {
         passwordMatch = true;
     }
 
+    //if passwords match, create user object and send data to server to be stored
     if (passwordMatch){
-        //create json object
-        QJsonObject json;
-        json["username"] = username;
-        json["password"] = password;
-        QJsonDocument jsonDoc(json);
-
-        QNetworkRequest request(QUrl("http://127.0.0.1:8000/register"));
-        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-        QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
-
-        //reply
-        QObject::connect(reply, &QNetworkReply::finished, [reply]() {
-            if (reply->error() == QNetworkReply::NoError) {
-                QByteArray responseData = reply->readAll();
-                QMessageBox::information(nullptr, "Success", "User registered successfully!");
-            } else {
-                QMessageBox::critical(nullptr, "Error", "Failed to register: " + reply->errorString());
-            }
-            reply->deleteLater();
-        });
+        User user(username.toStdString(), password.toStdString());
+        user.registerUser(user);
     }
 }

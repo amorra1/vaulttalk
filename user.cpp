@@ -3,27 +3,32 @@
 #include <unordered_map>
 #include <functional> // for hash functions like SHA-256
 #include <sstream>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QUrl>
+#include <QMessageBox>
+#include <functional>
 
 using namespace std;
+User::User() : username(""), hashedPassword("") {}
+User::User(string username, string password) : username(username), hashedPassword(hashPassword(password)) {}
 
-// Initing a static database
-unordered_map<string, User> User::userDatabase;
+// to be used once public and private key generation is implemented
+// User::User() : username(""), hashedPassword(""), publicKey(""), privateKey("") {}
+// User::User (string username, string password, string pubKey, string privKey)
+//     : username(username), hashedPassword(hashPassword(password)), publicKey(pubKey), privateKey(privKey) {}
 
-User::User() : userId(""), username(""), publicKey(""), hashedPassword("") {}
-User::User(string id, string name, string pubKey, string hashedPassword)
-    : userId(id), username(name), publicKey(pubKey), hashedPassword(hashedPassword) {}
-
-
-
-string User::getUserId() const { return userId; }
-string User::getUsername() const { return username; }
-string User::getPublicKey() const { return publicKey; }
-
-
-// compares hashed password
-bool User::authenticate(string passwordAttempt) const {
-    return hashedPassword == hashPassword(passwordAttempt);
+User::~User() {
+    username.clear();
+    hashedPassword.clear();
 }
+
+string User::getUsername() const { return username; }
+// string User::getPublicKey() const { return publicKey; }
+// string User::getPrivateKey() const { return privateKey; }
 
 //need to add a hashing function such as sha-256, this is used for temp replacement right now
 string User::hashPassword(const string &password) {
@@ -36,32 +41,56 @@ string User::hashPassword(const string &password) {
 }
 
 // for registering
-bool User::registerUser(const string &username, const string &password, const string &publicKey) {
-    if (userDatabase.find(username) != userDatabase.end()) {
-        cout << "Username is nto available!" << endl;
-        return false; // User already exists
-    }
+void  User::registerUser(User user) {
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
-    string hashedPassword = hashPassword(password);
-    User newUser(username, username, publicKey, hashedPassword);
-    userDatabase[username] = newUser;
-    cout << "User " << username << " registered successfully!" << endl;
-    return true;
+    //create json object
+    QJsonObject json;
+    json["username"] = QString::fromStdString(user.username);
+    json["password"] = QString::fromStdString(user.hashedPassword);
+    QJsonDocument jsonDoc(json);
+
+    QNetworkRequest request(QUrl("http://127.0.0.1:8000/register"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
+
+    //reply
+    QObject::connect(reply, &QNetworkReply::finished, [reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            QByteArray responseData = reply->readAll();
+            QMessageBox::information(nullptr, "Success", "User registered successfully!");
+        } else {
+            QMessageBox::critical(nullptr, "Error", "Failed to register: " + reply->errorString());
+        }
+        reply->deleteLater();
+    });
 }
 
 // for logging in an existing user
-User* User::loginUser(const string &username, const string &password) {
-    auto it = userDatabase.find(username);
-    if (it == userDatabase.end()) {
-        cout << "User is not found!" << endl;
-        return nullptr;
-    }
+void User::loginUser(User user, std::function<void(bool)> callback) {
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
-    if (it->second.authenticate(password)) {
-        cout << "Login successful!" << endl;
-        return &it->second;
-    } else {
-        cout << "Incorrect password!" << endl;
-        return nullptr;
-    }
+    //create json object
+    QJsonObject json;
+    json["username"] = QString::fromStdString(user.username);
+    json["password"] = QString::fromStdString(user.hashedPassword);
+    QJsonDocument jsonDoc(json);
+
+    QNetworkRequest request(QUrl("http://127.0.0.1:8000/login"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
+
+    //reply
+    QAbstractSocket::connect(reply, &QNetworkReply::finished, [reply, callback]() {
+        bool successCheck = false;
+        if (reply->error() == QNetworkReply::NoError) {
+            qDebug() << "login success";
+            successCheck = true;
+        }
+        reply->deleteLater();
+
+        callback(successCheck);
+    });
 }
