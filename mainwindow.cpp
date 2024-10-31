@@ -13,6 +13,8 @@
 #include <QMessageBox>
 #include "user.h"
 
+User* currentUser = new User();
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -57,11 +59,11 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::onSendButtonClicked() {
-    User sender(ui->senderInput->text().toStdString(), "testPassword");
+    // User sender(ui->senderInput->text().toStdString(), "testPassword");
     User receiver(ui->receiverInput->text().toStdString(), "testPassword");
     std::string content = ui->messageInput->text().toStdString();
 
-    Message msg(sender, receiver, content);
+    Message msg(*currentUser, receiver, content);
 
     // QString text = QString::fromStdString(msg.getEncryptedContent());
 
@@ -77,9 +79,10 @@ void MainWindow::login() {
     QString username = ui->usernameInput->text();
     QString password = ui->passwordInput->text();
 
+    delete currentUser;
     //create user object and login
-    User user(username.toStdString(), password.toStdString());
-    user.loginUser(user, [this](bool success) {
+    currentUser = new User(username.toStdString(), password.toStdString());
+    currentUser->loginUser(*currentUser, [this](bool success) {
         if (success) {
             qDebug() << "Callback: Login was successful!";
             ui->stackedWidget->setCurrentIndex(1);
@@ -88,6 +91,8 @@ void MainWindow::login() {
             QMessageBox::critical(this, "Error", "Login failed: ");
         }
     });
+
+    ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
 }
 void MainWindow::goToMain() {
     ui->stackedWidget->setCurrentIndex(1);
@@ -117,6 +122,8 @@ void MainWindow::registerUser() {
     QString username = ui->signUpUsernameInput->text();
     QString password = ui->signUpPasswordInput->text();
 
+    delete currentUser;
+
     //user input error handling
     if(ui->signUpPasswordInput->text() != ui->signUpConfirmPassusernameInput->text()){
         QMessageBox::critical(nullptr, "Error", "Passwords do not match");
@@ -130,7 +137,7 @@ void MainWindow::registerUser() {
 
     //if passwords match, create user object and send data to server to be stored
     if (passwordMatch){
-        User user(username.toStdString(), password.toStdString());
-        user.registerUser(user);
+        currentUser = new User(username.toStdString(), password.toStdString());
+        currentUser->registerUser(*currentUser);
     }
 }

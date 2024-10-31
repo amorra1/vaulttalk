@@ -26,7 +26,7 @@ User::~User() {
     hashedPassword.clear();
 }
 
-string User::getUsername() const { return username; }
+string User::getUsername() const { return this->username; }
 // string User::getPublicKey() const { return publicKey; }
 // string User::getPrivateKey() const { return privateKey; }
 
