@@ -5,14 +5,23 @@
 #include <QUrl>
 #include <QDebug>
 #include <QString>
-#include <iostream>
 
 // constructor
 networking::networking(QObject *parent)
     : QObject(parent), m_webSocket(new QWebSocket()) {
+    // use whatever address the webserver is hosted on (localhost for testing)
+    QUrl url(QStringLiteral("ws://localhost:12345"));
+
+    // start websocket connection at url
+    m_webSocket->open(url);
+
+    // connections for WebSocket events
     connect(m_webSocket, &QWebSocket::connected, this, &networking::onConnected);
     connect(m_webSocket, &QWebSocket::disconnected, this, &networking::onDisconnected);
     connect(m_webSocket, &QWebSocket::errorOccurred, this, &networking::onError);
+
+    // incoming messages
+    connect(m_webSocket, &QWebSocket::textMessageReceived, this, &networking::onMessageReceived);
 }
 
 // destructor
@@ -22,22 +31,16 @@ networking::~networking() {
 
 // send message function
 void networking::sendMessage(Message &message) {
-    // use whatever address the webserver is hosted on (localhost for testing)
-    QUrl url(QStringLiteral("ws://localhost:12345"));
-
-    // start websocket connection at url
-    m_webSocket->open(url);
-
-    // once connected, send the message content
-    connect(m_webSocket, &QWebSocket::connected, [this, message]() {
+    if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
         QString encryptedMessage = QString::fromStdString(message.getEncryptedContent());
         m_webSocket->sendTextMessage(encryptedMessage);
-        //This line below commented out was giving me a segmentation fault for some reason
-        // std::cout << "Sent message: " << message.toStdString() << std::endl;
-    });
+        qDebug() << "Sent message: " << encryptedMessage;
+    } else {
+        qDebug() << "Connection not established. Message was not sent!";
+    }
 }
 
-// webSocket event slots, these output on events (self explanitory)
+// webSocket event slots, these output on events (self explanatory)
 void networking::onConnected() {
     qDebug() << "WebSocket connected.";
 }
@@ -48,4 +51,8 @@ void networking::onDisconnected() {
 
 void networking::onError(QAbstractSocket::SocketError error) {
     qDebug() << "WebSocket error:" << error;
+}
+
+void networking::onMessageReceived(const QString &message) {
+    qDebug() << "Message received: " << message;
 }
