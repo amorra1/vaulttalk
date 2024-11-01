@@ -27,6 +27,7 @@ private slots:
     void logout();
     void Register();
     void registerUser();
+    void buildSettingsDisplay();
 
 
 private:

@@ -143,3 +143,6 @@ void MainWindow::registerUser() {
         currentUser->registerUser(*currentUser);
     }
 }
+void MainWindow::buildSettingsDisplay(){
+    ui->settingsDisplay->clear();
+}
