@@ -34,6 +34,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->receiverInput->setPlaceholderText("Receiver");
     ui->messageDisplay->setReadOnly(true);
 
+    ui->settingsDisplay->addItem("Enryption Method: ");
+
     //register page
     ui->signUpUsernameInput->setPlaceholderText("Username");
     ui->signUpPasswordInput->setPlaceholderText("Password");

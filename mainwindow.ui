@@ -221,6 +221,16 @@
        <set>Qt::AlignmentFlag::AlignCenter</set>
       </property>
      </widget>
+     <widget class="QListWidget" name="settingsDisplay">
+      <property name="geometry">
+       <rect>
+        <x>780</x>
+        <y>60</y>
+        <width>111</width>
+        <height>291</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="signUpPage">
      <widget class="QLabel" name="titleLabel_2">
