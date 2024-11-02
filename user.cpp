@@ -1,7 +1,6 @@
 #include "user.h"
 #include <iostream>
-#include <unordered_map>
-#include <functional> // for hash functions like SHA-256
+#include <functional>
 #include <sstream>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -10,44 +9,57 @@
 #include <QJsonDocument>
 #include <QUrl>
 #include <QMessageBox>
-#include <functional>
 
 using namespace std;
-User::User() : username(""), hashedPassword("") {}
-User::User(string username, string password) : username(username), hashedPassword(hashPassword(password)) {}
 
-// to be used once public and private key generation is implemented
-// User::User() : username(""), hashedPassword(""), publicKey(""), privateKey("") {}
-// User::User (string username, string password, string pubKey, string privKey)
-//     : username(username), hashedPassword(hashPassword(password)), publicKey(pubKey), privateKey(privKey) {}
+// Default constructor
+User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDuration("") {}
+
+// Constructor with username and password, default encryptionMethod and regenDuration
+User::User(string username, string password)
+    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("never") {}
+
+// Constructor with username, password, encryption method, and regeneration duration
+User::User(string username, string password, string method, string duration)
+    : username(username), hashedPassword(hashPassword(password)), encryptionMethod(method), regenDuration(duration) {}
 
 User::~User() {
     username.clear();
     hashedPassword.clear();
+    encryptionMethod.clear();
+    regenDuration.clear();
 }
 
+// Getter and setter for username
 string User::getUsername() const { return this->username; }
-// string User::getPublicKey() const { return publicKey; }
-// string User::getPrivateKey() const { return privateKey; }
+void User::setUsername(string name) { this->username = name; }
 
-//need to add a hashing function such as sha-256, this is used for temp replacement right now
+// Getter and setter for encryptionMethod
+string User::getEncryptionMethod() const { return this->encryptionMethod; }
+void User::setEncryptionMethod(string method) { this->encryptionMethod = method; }
+
+// Getter and setter for regenDuration
+string User::getRegenDuration() const { return this->regenDuration; }
+void User::setRegenDuration(string duration) { this->regenDuration = duration; }
+
+// Temporary hash function for password (replace with a secure hash later)
 string User::hashPassword(const string &password) {
-    // Example of simple hash function using std::hash (replace with a more secure one)
     hash<string> hasher;
     size_t hashedValue = hasher(password);
     stringstream ss;
-    ss << hex << hashedValue; // Convert to hexadecimal string
+    ss << hex << hashedValue;
     return ss.str();
 }
 
-// for registering
-void  User::registerUser(User user) {
+// Register user function
+void User::registerUser(User user) {
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
-    //create json object
     QJsonObject json;
     json["username"] = QString::fromStdString(user.username);
     json["password"] = QString::fromStdString(user.hashedPassword);
+    json["encryptionMethod"] = QString::fromStdString(user.encryptionMethod);
+    json["regenDuration"] = QString::fromStdString(user.regenDuration);
     QJsonDocument jsonDoc(json);
 
     QNetworkRequest request(QUrl("http://127.0.0.1:8000/register"));
@@ -55,10 +67,8 @@ void  User::registerUser(User user) {
 
     QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
 
-    //reply
     QObject::connect(reply, &QNetworkReply::finished, [reply]() {
         if (reply->error() == QNetworkReply::NoError) {
-            QByteArray responseData = reply->readAll();
             QMessageBox::information(nullptr, "Success", "User registered successfully!");
         } else {
             QMessageBox::critical(nullptr, "Error", "Failed to register: " + reply->errorString());
@@ -67,14 +77,15 @@ void  User::registerUser(User user) {
     });
 }
 
-// for logging in an existing user
+// Login user function
 void User::loginUser(User user, std::function<void(bool)> callback) {
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
-    //create json object
     QJsonObject json;
     json["username"] = QString::fromStdString(user.username);
     json["password"] = QString::fromStdString(user.hashedPassword);
+    json["encryptionMethod"] = QString::fromStdString(user.encryptionMethod);
+    json["regenDuration"] = QString::fromStdString(user.regenDuration);
     QJsonDocument jsonDoc(json);
 
     QNetworkRequest request(QUrl("http://127.0.0.1:8000/login"));
@@ -82,12 +93,13 @@ void User::loginUser(User user, std::function<void(bool)> callback) {
 
     QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
 
-    //reply
-    QAbstractSocket::connect(reply, &QNetworkReply::finished, [reply, callback]() {
+    QObject::connect(reply, &QNetworkReply::finished, [reply, callback]() {
         bool successCheck = false;
         if (reply->error() == QNetworkReply::NoError) {
-            qDebug() << "login success";
+            qDebug() << "Login successful";
             successCheck = true;
+        } else {
+            qDebug() << "Login failed: " << reply->errorString();
         }
         reply->deleteLater();
 

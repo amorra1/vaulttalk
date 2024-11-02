@@ -12,6 +12,7 @@ class User {
 public:
     User(); // Default constructor
     User(std::string username, std::string hashedPassword);
+    User(std::string username, std::string hashedPassword, std::string method, std::string duration);
     // User(std::string username, std::string hashedPassword, std::string pubKey, std::string privKey);
 
     ~User();
@@ -19,6 +20,12 @@ public:
     std::string getUsername() const;
     std::string getPublicKey() const;
     std::string getPrivateKey() const;
+    std::string getEncryptionMethod() const;
+    std::string getRegenDuration() const;
+
+    void setUsername(std::string name);
+    void setEncryptionMethod(std::string method);
+    void setRegenDuration(std::string duration);
 
     static std::string hashPassword(const std::string &password);
 
@@ -29,6 +36,8 @@ public:
 private:
     std::string username;
     std::string hashedPassword;
+    std::string encryptionMethod;
+    std::string regenDuration;
     // std::string publicKey;
     // std::string privateKey;
 
