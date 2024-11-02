@@ -95,6 +95,7 @@ void MainWindow::login() {
     });
 
     ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
+    buildSettingsDisplay();
 }
 void MainWindow::goToMain() {
     ui->stackedWidget->setCurrentIndex(1);
@@ -145,4 +146,23 @@ void MainWindow::registerUser() {
 }
 void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->clear();
+
+    QString encryptionMethod = QString::fromStdString(currentUser->getEncryptionMethod());
+    QString regenDuration = QString::fromStdString(currentUser->getRegenDuration());
+
+    QLabel* encryptionMethodLabel = new QLabel("<b><u>Encryption Method:</u></b><br>");
+    QLabel* regenDurationLabel = new QLabel("<b><u>Key Regeneration Period:</u></b><br>");
+
+    encryptionMethodLabel->setWordWrap(true);
+    regenDurationLabel->setWordWrap(true);
+
+    QListWidgetItem* encryptionItem = new QListWidgetItem();
+    ui->settingsDisplay->addItem(encryptionItem);
+    ui->settingsDisplay->addItem(encryptionMethod);
+    ui->settingsDisplay->setItemWidget(encryptionItem, encryptionMethodLabel);
+
+    QListWidgetItem* regenDurationItem = new QListWidgetItem();
+    ui->settingsDisplay->addItem(regenDurationItem);
+    ui->settingsDisplay->addItem(regenDuration);
+    ui->settingsDisplay->setItemWidget(regenDurationItem, regenDurationLabel);
 }
