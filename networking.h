@@ -16,8 +16,15 @@ public:
 
     void sendMessage(Message &message);
 
+    /*
+    constructor establishes a connection, but if the server is offline while that connection
+    is made then users cannot send messages, this function just attempts to restablish that
+    */
+    int reconnect();
+
     // slots used for asynchronous events
 private slots:
+
     void onConnected();
     void onDisconnected();
     void onError(QAbstractSocket::SocketError error);

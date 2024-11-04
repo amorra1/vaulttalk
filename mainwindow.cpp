@@ -65,9 +65,16 @@ void MainWindow::onSendButtonClicked() {
     User receiver(ui->receiverInput->text().toStdString(), "testPassword");
     std::string content = ui->messageInput->text().toStdString();
 
-    Message msg(*currentUser, receiver, content);
+    Message msg(*currentUser, content);
 
     // QString text = QString::fromStdString(msg.getEncryptedContent());
+
+    /*
+     temporary placement of reconnect, maybe in the future the client should
+     try to reconnect every X amount of time
+     */
+    network.reconnect();
+
 
     network.sendMessage(msg);
 

@@ -13,8 +13,8 @@ string decryptMessage(const string &encryptedMessage) {
 }
 
 //constructor
-Message::Message(const User &from, const User &to, const string &msgContent)
-    : sender(from), receiver(to), timestamp(time(nullptr)) {
+Message::Message(const User &from, const string &msgContent)
+    : sender(from), timestamp(time(nullptr)) {
     content = encryptMessage(msgContent);
 }
 
@@ -28,7 +28,6 @@ string Message::getDecryptedContent(const string &privateKey) const {
 
 void Message::displayMessage() const {
     cout << "From: " << sender.getUsername()
-    << ", To: " << receiver.getUsername()
     << ", Timestamp: " << ctime(&timestamp)
     << ", Encrypted Content: " << content << endl;
 }

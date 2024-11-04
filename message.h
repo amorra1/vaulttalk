@@ -10,12 +10,11 @@ using namespace std;
 class Message {
 private:
     User sender;
-    User receiver;
     string content;  //actual content of the message
     time_t timestamp;
 
 public:
-    Message(const User &from, const User &to, const string &msgContent);
+    Message(const User &from, const string &msgContent);
 
     string getEncryptedContent() const;
     string getDecryptedContent(const string &privateKey) const;

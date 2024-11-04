@@ -6,11 +6,13 @@
 #include <QDebug>
 #include <QString>
 
+
+QString host = "ws://localhost:12345";
 // constructor
 networking::networking(QObject *parent)
     : QObject(parent), m_webSocket(new QWebSocket()) {
     // use whatever address the webserver is hosted on (localhost for testing)
-    QUrl url(QStringLiteral("ws://localhost:12345"));
+    QUrl url(host);
 
     // start websocket connection at url
     m_webSocket->open(url);
@@ -37,6 +39,13 @@ void networking::sendMessage(Message &message) {
         qDebug() << "Sent message: " << encryptedMessage;
     } else {
         qDebug() << "Connection not established. Message was not sent!";
+    }
+}
+
+int networking::reconnect(){
+    if (m_webSocket->state() != QAbstractSocket::ConnectedState) {
+        m_webSocket->open(QUrl(host));
+        qDebug() << "Reconnecting to WebSocket at" << host;
     }
 }
 
