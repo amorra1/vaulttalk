@@ -1,30 +1,29 @@
-// #ifndef ENCRYPTION_H
-// #define ENCRYPTION_H
+#ifndef ENCRYPTION_H
+#define ENCRYPTION_H
 
-// #include <string>
+#include <string>
+#include <gmpxx.h>
 
+// The data structure containing the user's "keyring"
+typedef struct keys {
+    mpz_class publicKey[2];  // [n,e] - RSA public key components
+    mpz_class privateKey[2]; // [n,d]
 
-// typedef struct keys {
+} RSA_keys;
 
-//     long long publicKey[2]; // [n,e] - RSA public key components
-//     long long privateKey[2]; // [n,e]
+namespace encryption {
 
-// }RSA_keys;
+    // Generation of RSA public and private key pair
+    RSA_keys GenerateKeys();
 
-// namespace encryption {
+    // Encrypt a message using the user's "keyring".
+    // Returns an mpz_class integer.
+    // NOTE: PASS IN THE ENTIRE KEYRING NOT JUST THE PUBLIC KEY
+    mpz_class RSA_Encrypt(std::string& inputMsg, RSA_keys keys);
 
-// // Generation of RSA public and private key pair
-// RSA_keys GenerateKeys();
+    // Decrypt the encrypted value using the private key (returns original message as string)
+    std::string RSA_Decrypt(mpz_class inputValue, RSA_keys keys);
 
-// unsigned long long RSA_Encrypt(std::string inputMsg, RSA_keys keys);
-// std::string RSA_Decrypt(unsigned long long inputValue, RSA_keys keys);
+} // end namespace encryption
 
-// // // Encrypt a message using public key (message as string, returns a single encrypted value)
-// // unsigned long long RSA_Encrypt(const std::string&inputMsg, const long long publicKey[2]);
-
-// // // Decrypt the encrypted value using the private key (returns original message as string)
-// // std::string RSA_Decrypt(unsigned long long inputValue, const long long privateKey[2]);
-
-// } // end namespace encryption
-
-// #endif // ENCRYPTION_H
+#endif // ENCRYPTION_H

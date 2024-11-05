@@ -1,230 +1,220 @@
-// #include <ctime>
-// #include <iostream>
-// #include <math.h>
-// #include <random>
-// #include <bitset>
-// #include <gmpxx.h>
+#include <ctime>
+#include <gmpxx.h>
+#include <iostream>
+#include <math.h>
+#include <chrono>
+#include <sstream>
 
-// #include "encryption.h"
+#include "encryption.h"
 
-// using namespace encryption;
+using namespace encryption;
 
-// // Function prototypes used in encryption.cpp.
-// // NOTE: THESE ARE ONLY MEANT TO BE USED AS HELPER FUNCTIONS AS OF THE CURRENT VERSION.
+// Function prototypes used in encryption.cpp.
+// NOTE: THESE ARE ONLY MEANT TO BE USED AS HELPER FUNCTIONS AS OF THE CURRENT VERSION.
 
-// mpz_class GeneratePrime(int bitSize);
-// bool CheckCoPrime(mpz_class a, mpz_class b);
-// mpz_class ModInverse(mpz_class a, mpz_class m);
+mpz_class GeneratePrime(int bitSize);
+bool CheckCoPrime(mpz_class a, mpz_class b);
+mpz_class ModInverse(mpz_class a, mpz_class m);
 
-// // Generate a random prime number.
+// Generate a random prime number.
 
-// mpz_class GeneratePrime(int bitSize) {
+mpz_class GeneratePrime(int bitSize) {
+    mpz_class random;
+    mpz_class prime;
 
-//     mpz_class random;
-//     mpz_class prime;
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
 
-//     gmp_randstate_t state;
-//     gmp_randinit_default(state);
-//     gmp_randseed_ui(state, time(NULL));
+    unsigned long seed = std::chrono::system_clock::now().time_since_epoch().count();
 
-//     mpz_urandomb(random.get_mpz_t(), state, bitSize);
+    gmp_randseed_ui(state, seed);
 
-//     mpz_nextprime(prime.get_mpz_t(), random.get_mpz_t());
+    mpz_urandomb(random.get_mpz_t(), state, bitSize);
 
-//     gmp_randclear(state);
+    mpz_nextprime(prime.get_mpz_t(), random.get_mpz_t());
 
-//     return prime;
+    gmp_randclear(state);
 
-// }
+    return prime;
+}
 
-// // Checks if two numbers are coprime.
-// // in the arguments, a is meant to be manually entered as the smaller of the two numbers.
+// Checks if two numbers are coprime.
+// in the arguments, a is meant to be manually entered as the smaller of the two numbers.
 
-// bool CheckCoPrime(mpz_class a, mpz_class b) {
+bool CheckCoPrime(mpz_class a, mpz_class b) {
+    mpz_class result = gcd(a, b);
 
-//     mpz_class result = gcd(a, b);
+    if (result != 1) {
+        return false;
 
-//     if (result != 1) {
+    } else {
+        return true;
+    }
+}
 
-//         return false;
+// Helper function for ModInverse().
 
-//     } else {
+mpz_class ExtendedGCD(mpz_class a, mpz_class b, mpz_class& x, mpz_class& y) {
+    if (b == 0) {
+        x = 1;
+        y = 0;
 
-//         return true;
-//     }
-// }
+        return a;
+    }
 
-// // Hlper function for ModInverse().
+    // To store results of recursive call
 
-// mpz_class ExtendedGCD(mpz_class a, mpz_class b, mpz_class& x, mpz_class& y) {
+    mpz_class x1, y1;
+    mpz_class gcd = ExtendedGCD(b, a % b, x1, y1);
 
-//     if (b == 0) {
+    x = y1;
+    y = x1 - (a / b) * y1;
 
-//         x = 1;
-//         y = 0;
+    return gcd;
+}
 
-//         return a;
-//     }
+// Function to find modular multiplicative inverse
 
-//     // To store results of recursive call
+mpz_class ModInverse(mpz_class a, mpz_class m) {
+    mpz_class x, y;
+    mpz_class gcd = ExtendedGCD(a, m, x, y);
 
-//     mpz_class x1, y1;
-//     mpz_class gcd = ExtendedGCD(b, a % b, x1, y1);
+    mpz_class res = (x % m + m) % m;
+    return res;
+}
 
-//     x = y1;
-//     y = x1 - (a / b) * y1;
+// Generates a user's "keyring".
+// A keyring contains the private, public and modulus needed for encryption and decryption.
+// Should only be called once per user, or per regeneration of key pairs.
 
-//     return gcd;
-// }
+RSA_keys encryption::GenerateKeys() {
+    std::cout << "Generating primes..." << std::endl;
 
-// // Function to find modular multiplicative inverse
+    mpz_class primes[2];
 
-// mpz_class ModInverse(mpz_class a, mpz_class m) {
+    // Calling the GeneratePrime() function to create primes used in key generation
+    primes[0] = GeneratePrime(1024);
+    primes[1] = GeneratePrime(1024);
 
-//     mpz_class x, y;
-//     mpz_class gcd = ExtendedGCD(a, m, x, y);
+    mpz_class modulus = primes[0] * primes[1];
+    mpz_class phi = (primes[1] - 1) * (primes[0] - 1);
+    mpz_class e = 65537;
+    mpz_class d;
 
-//     mpz_class res = (x % m + m) % m;
-//     return res;
+    // Verify if e is coprime to phi. If not generate new e.
+    std::cout << "Checking if default e is valid..." << std::endl;
 
-// }
+    if (!CheckCoPrime(e, phi)) {
+        std::cout << "e is not valid. Regenerating to new coprime value..." << std::endl;
 
-// RSA_keys encryption::GenerateKeys(){
+        while (true) {
+            // GeneratePrime accepts the lower range as an arguement. In this case it is e.
 
-//     std::cout << "Generating primes..." << std::endl;
+            mpz_class newPrime;
 
-//     mpz_class primes[2];
+            mpz_nextprime(newPrime.get_mpz_t(), e.get_mpz_t());
 
-//     primes[0] = GeneratePrime(512);
-//     primes[1] = GeneratePrime(512);
+            if (CheckCoPrime(newPrime, phi)) {
+                std::cout << "New e is: " << newPrime << std::endl;
 
-//     mpz_class modulus = primes[0] * primes[1];
-//     mpz_class phi = (primes[1] - 1) * (primes[0] - 1);
-//     mpz_class e = 3;
-//     mpz_class d;
+                e = newPrime;
+                break;
+            }
+        }
+    }
 
-//     std::cout << "Checking if default e is valid..." << std::endl;
+    std::cout << "Generating d... " << std::endl;
 
-//     if (!CheckCoPrime(e, phi)) {
+    // Using the ModInverse() function, find the modular inverse of e and phi (d).
+    d = ModInverse(e, phi);
 
-//         std::cout << "e is not valid. Regenerating to new coprime value..." << std::endl;
+    RSA_keys keys;
 
-//         while (true) {
+    keys.publicKey[0] = modulus;
+    keys.publicKey[1] = e;
 
-//             // GeneratePrime accepts the lower range as an arguement. In this case it is e.
+    keys.privateKey[0] = modulus;
+    keys.privateKey[1] = d;
 
-//             mpz_class newPrime;
+    std::cout << std::endl
+        << "Generated Primes: " << primes[0].get_str().substr(0, 10) << "... " << "and " << primes[1].get_str().substr(0, 10) << "... " << std::endl;
+    std::cout << "Modulus: " << modulus.get_str().substr(0, 10) << "... " << std::endl;
+    std::cout << "Phi: " << phi.get_str().substr(0, 10) << "... " << std::endl;
+    std::cout << "E: " << e << std::endl;
+    std::cout << "D: " << d.get_str().substr(0, 10) << "... " << std::endl;
 
-//             mpz_nextprime(newPrime.get_mpz_t(), e.get_mpz_t());
+    return keys;
+}
 
-//             if (CheckCoPrime(newPrime, phi)) {
+// Used to encrypt the original message. Returns an mpz_class integer.
+mpz_class encryption::RSA_Encrypt(std::string& inputMsg, RSA_keys keys) {
 
-//                 std::cout << "New e is: " << newPrime << std::endl;
+    std::cout << std::endl << "Encrypting Message..." << std::endl;
 
-//                 e = newPrime;
-//                 break;
-//             }
-//         }
-//     }
+    std::stringstream ss;
+    std::string hexString;
 
-//     std::cout << "Generating d... " << std::endl;
+    // Convert the original message into its hexidecimal representation.
+    for (int i = 0; i < inputMsg.size(); i++) {
 
-//     d = ModInverse(e, phi);
+        // Convert the character to its ASCII representation
+        int decVal = int(inputMsg[i]);
 
-//     RSA_keys keys;
+        // Convert the ASCII representation to hex
+        ss << std::hex << decVal;
 
-//     keys.publicKey[0] = modulus;
-//     keys.publicKey[1] = e;
+        // Add the hex to the final string
+        hexString = ss.str();
+    }
 
-//     keys.privateKey[0] = modulus;
-//     keys.privateKey[1] = d;
+    // Convert the final string to an mpz_class integer
+    mpz_class decHexString(hexString, 16);
 
-//     std::cout << std::endl << "Generated Primes: " << primes[0] << " and " << primes[1] << std::endl;
-//     std::cout << "Modulus: " << modulus << std::endl;
-//     std::cout << "Phi: " << phi << std::endl;
-//     std::cout << "E: " << e << std::endl;
-//     std::cout << "D: " << d << std::endl;
+    mpz_class encrypted;
 
-//     return keys;
+    std::cout << "Encryption is being performed using: " << std::endl;
+    std::cout << "E: " << keys.publicKey[1] << std::endl;
+    std::cout << "Modulus: " << keys.publicKey[0].get_str().substr(0, 10) << "... " << std::endl;
 
-// }
+    // Performs the encryption of the decimal value of the string.
+    mpz_powm(encrypted.get_mpz_t(), decHexString.get_mpz_t(), keys.publicKey[1].get_mpz_t(), keys.publicKey[0].get_mpz_t());
 
-// // Currently the best version of RSA encryption we can create. Libraries are needed to handle the size of the numbers used.
+    std::cout << std::endl << "Encrypted message is: " << encrypted << std::endl;
 
-// //mpz_class encryption::RSA_Encrypt(std::string inputMsg, RSA_keys keys) {
-// //
-// //    std::string bitString = "";
-// //
-// //    for (size_t i = 0; i < inputMsg.size(); i++) {
-// //
-// //        std::bitset<8> tempBits = std::bitset<8>(inputMsg[i]);
-// //
-// //        std::string tempString = tempBits.to_string();
-// //
-// //        for (size_t i = 0; i < tempString.size(); i++) {
-// //
-// //            bitString.push_back(tempString[i]);
-// //
-// //        }
-// //
-// //    }
-// //
-// //    std::cout << std::endl << "Generating binary representation of string..." << std::endl;
-// //    std::cout << bitString << std::endl;
-// //    std::cout << std::endl << "Generating decimal representation..." << std::endl;
-// //
-// //    int decVal = 0;
-// //    int max_exp = bitString.size() - 1;
-// //
-// //    for (int i = 0; i < bitString.size(); i++) {
-// //
-// //        if (bitString[i] == '1') {
-// //
-// //            decVal += pow(2, max_exp);
-// //
-// //        }
-// //
-// //        max_exp--;
-// //
-// //    }
-// //
-// //    std::cout << decVal << std::endl;
-// //    std::cout << std::endl << "Generating final encrypted message..." << std::endl;
-// //
-// //    unsigned long long tempPowVal = pow(decVal, keys.publicKey[1]);
-// //    unsigned long long encrypted = tempPowVal % keys.publicKey[0];
-// //
-// //    std::cout << encrypted << std::endl;
-// //
-// //    return encrypted;
-// //
-// //}
+    return encrypted;
 
-// // The RSA decryption algorithm is currently unfinished. The numbers are overflowing even an unsigned long long.
-// // See RSA_Encrypt for explanation on fix.
+}
 
-// //std::string encryption::RSA_Decrypt(unsigned long long inputValue, RSA_keys keys) {
-// //
-// //    std::cout << std::endl << "Message recieved: " << std::endl;
-// //    std::cout << inputValue << std::endl;
-// //
-// //    std::cout << std::endl << "Decrypting message..." << std::endl;
-// //
-// //    unsigned long long tempPowVal = pow(inputValue, keys.privateKey[1]);
-// //
-// //    unsigned long long decrypted = tempPowVal % keys.privateKey[0];
-// //
-// //    std::cout << std::endl << "The decimal representation of the message is: " << std::endl;
-// //    std::cout << decrypted << std::endl;
-// //
-// //    std::cout << "Converting decimal to binary..." << std::endl;
-// //
-// //    std::string binVal = std::bitset<16>(decrypted).to_string();
-// //
-// //    std::cout << std::endl << "The binary representation of the message is: " << std::endl;
-// //    std::cout << binVal << std::endl;
-// //
-// //    return "Temp";
-// //
-// //}
+// Used to decrypt the mpz_class integer generated during encryption.
+std::string encryption::RSA_Decrypt(mpz_class inputValue, RSA_keys keys) {
+
+    std::cout << std::endl << "Decrypting string... " << std::endl;
+
+    mpz_class decryptedDecVal;
+
+    std::cout << "Decryption is being performed using: " << std::endl;
+    std::cout << "D: " << keys.privateKey[1].get_str().substr(0, 10) << "... " << std::endl;
+    std::cout << "Modulus: " << keys.privateKey[0].get_str().substr(0, 10) << "... " << std::endl;
+
+    // Undoes the encryption using the user's private key and modulus.
+    mpz_powm(decryptedDecVal.get_mpz_t(), inputValue.get_mpz_t(), keys.privateKey[1].get_mpz_t(), keys.privateKey[0].get_mpz_t());
+
+    // Converts the mpz_class integer into a hexidecimal string
+    std::string hexString = mpz_get_str(nullptr, 16, decryptedDecVal.get_mpz_t());
+
+    std::string decrypted;
+
+    // Converts the hexidecimal string to its ASCII character equivalent.
+    for (int i = 0; i < hexString.length(); i += 2) {
+
+        std::string byte = hexString.substr(i, 2);
+
+        char chr = (char)(int)strtol(byte.c_str(), nullptr, 16);
+
+        decrypted.push_back(chr);
+    }
+
+    return decrypted;
+
+}
 
