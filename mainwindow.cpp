@@ -73,14 +73,14 @@ void MainWindow::onSendButtonClicked() {
      temporary placement of reconnect, maybe in the future the client should
      try to reconnect every X amount of time
      */
-    network.reconnect();
+    // network.reconnect();
 
 
-    network.sendMessage(msg);
-
-    if(!content.empty()){
+    if(network.sendMessage(msg) && !content.empty()){
         ui->messageDisplay->append("You: " + QString::fromStdString(content));
         ui->messageInput->clear();
+    } else {
+        QMessageBox::critical(nullptr, "Error", "Message failed to send.");
     }
 }
 void MainWindow::login() {
@@ -95,9 +95,6 @@ void MainWindow::login() {
         if (success) {
             qDebug() << "Callback: Login was successful!";
             ui->stackedWidget->setCurrentIndex(1);
-        } else {
-            qDebug() << "Callback: Login failed.";
-            QMessageBox::critical(this, "Error", "Login failed: ");
         }
     });
 
@@ -137,9 +134,9 @@ void MainWindow::registerUser() {
     //user input error handling
     if(ui->signUpPasswordInput->text() != ui->signUpConfirmPassusernameInput->text()){
         QMessageBox::critical(nullptr, "Error", "Passwords do not match");
-    }else if(ui->signUpUsernameInput->text() == ""){
+    }else if(username.isEmpty()){
         QMessageBox::critical(nullptr, "Error", "Please enter a username");
-    }else if(ui->signUpPasswordInput->text() == ""){
+    }else if(password.isEmpty()){
         QMessageBox::critical(nullptr, "Error", "Please enter a password");
     }else {
         passwordMatch = true;
