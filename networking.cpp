@@ -32,13 +32,15 @@ networking::~networking() {
 }
 
 // send message function
-void networking::sendMessage(Message &message) {
+bool networking::sendMessage(Message &message) {
     if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
         QString encryptedMessage = QString::fromStdString(message.getEncryptedContent());
         m_webSocket->sendTextMessage(encryptedMessage);
         qDebug() << "Sent message: " << encryptedMessage;
+        return true;
     } else {
         qDebug() << "Connection not established. Message was not sent!";
+        return false;
     }
 }
 

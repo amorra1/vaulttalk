@@ -71,7 +71,14 @@ void User::registerUser(User user) {
         if (reply->error() == QNetworkReply::NoError) {
             QMessageBox::information(nullptr, "Success", "User registered successfully!");
         } else {
-            QMessageBox::critical(nullptr, "Error", "Failed to register: " + reply->errorString());
+            QByteArray responseData = reply->readAll();
+            QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+            QJsonObject jsonObject = jsonResponse.object();
+            QString errorMessage = jsonObject.contains("detail")
+                                       ? jsonObject["detail"].toString()
+                                       : "Failed to register due to an unknown error.";
+
+            QMessageBox::critical(nullptr, "Registration Error", errorMessage);
         }
         reply->deleteLater();
     });
@@ -99,7 +106,14 @@ void User::loginUser(User user, std::function<void(bool)> callback) {
             qDebug() << "Login successful";
             successCheck = true;
         } else {
-            qDebug() << "Login failed: " << reply->errorString();
+            QByteArray responseData = reply->readAll();
+            QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+            QJsonObject jsonObject = jsonResponse.object();
+            QString errorMessage = jsonObject.contains("detail")
+                                       ? jsonObject["detail"].toString()
+                                       : "Failed to login due to an unknown error.";
+
+            QMessageBox::critical(nullptr, "Registration Error", errorMessage);;
         }
         reply->deleteLater();
 
