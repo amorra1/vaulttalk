@@ -32,3 +32,11 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+LIBS += -L$$PWD/gmp_compiled/lib -lgmpxx -lgmp
+
+INCLUDEPATH += $$PWD/gmp_compiled/inc
+
+DEPENDPATH += $$PWD/gmp_compiled/inc
+PRE_TARGETDEPS += $$PWD/gmp_compiled/lib/libgmpxx.a
+PRE_TARGETDEPS += $$PWD/gmp_compiled/lib/libgmp.a
