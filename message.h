@@ -16,15 +16,10 @@ private:
 public:
     Message(const User &from, const string &msgContent);
 
-    string getEncryptedContent() const;
+    string getEncryptedContent(User user);
     string getDecryptedContent(const string &privateKey) const;
 
     void displayMessage() const;
 };
-
-//to be implemented in encryption folder, these methods may just call other methods to encrypt/decrypt that
-//way we can call encrypt on the message content and decrypt on the message content
-string encryptMessage(const string &message);
-string decryptMessage(const string &encryptedMessage);
 
 #endif //MESSAGE_H

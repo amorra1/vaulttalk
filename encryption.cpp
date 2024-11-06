@@ -88,7 +88,7 @@ mpz_class ModInverse(mpz_class a, mpz_class m) {
 // Should only be called once per user, or per regeneration of key pairs.
 
 RSA_keys encryption::GenerateKeys() {
-    std::cout << "Generating primes..." << std::endl;
+    // std::cout << "Generating primes..." << std::endl;
 
     mpz_class primes[2];
 
@@ -102,10 +102,10 @@ RSA_keys encryption::GenerateKeys() {
     mpz_class d;
 
     // Verify if e is coprime to phi. If not generate new e.
-    std::cout << "Checking if default e is valid..." << std::endl;
+    // std::cout << "Checking if default e is valid..." << std::endl;
 
     if (!CheckCoPrime(e, phi)) {
-        std::cout << "e is not valid. Regenerating to new coprime value..." << std::endl;
+        // std::cout << "e is not valid. Regenerating to new coprime value..." << std::endl;
 
         while (true) {
             // GeneratePrime accepts the lower range as an arguement. In this case it is e.
@@ -115,7 +115,7 @@ RSA_keys encryption::GenerateKeys() {
             mpz_nextprime(newPrime.get_mpz_t(), e.get_mpz_t());
 
             if (CheckCoPrime(newPrime, phi)) {
-                std::cout << "New e is: " << newPrime << std::endl;
+                // std::cout << "New e is: " << newPrime << std::endl;
 
                 e = newPrime;
                 break;
@@ -123,7 +123,7 @@ RSA_keys encryption::GenerateKeys() {
         }
     }
 
-    std::cout << "Generating d... " << std::endl;
+    // std::cout << "Generating d... " << std::endl;
 
     // Using the ModInverse() function, find the modular inverse of e and phi (d).
     d = ModInverse(e, phi);
@@ -136,12 +136,12 @@ RSA_keys encryption::GenerateKeys() {
     keys.privateKey[0] = modulus;
     keys.privateKey[1] = d;
 
-    std::cout << std::endl
-        << "Generated Primes: " << primes[0].get_str().substr(0, 10) << "... " << "and " << primes[1].get_str().substr(0, 10) << "... " << std::endl;
-    std::cout << "Modulus: " << modulus.get_str().substr(0, 10) << "... " << std::endl;
-    std::cout << "Phi: " << phi.get_str().substr(0, 10) << "... " << std::endl;
-    std::cout << "E: " << e << std::endl;
-    std::cout << "D: " << d.get_str().substr(0, 10) << "... " << std::endl;
+    // std::cout << std::endl
+    //     << "Generated Primes: " << primes[0].get_str().substr(0, 10) << "... " << "and " << primes[1].get_str().substr(0, 10) << "... " << std::endl;
+    // std::cout << "Modulus: " << modulus.get_str().substr(0, 10) << "... " << std::endl;
+    // std::cout << "Phi: " << phi.get_str().substr(0, 10) << "... " << std::endl;
+    // std::cout << "E: " << e << std::endl;
+    // std::cout << "D: " << d.get_str().substr(0, 10) << "... " << std::endl;
 
     return keys;
 }
@@ -149,7 +149,7 @@ RSA_keys encryption::GenerateKeys() {
 // Used to encrypt the original message. Returns an mpz_class integer.
 mpz_class encryption::RSA_Encrypt(std::string& inputMsg, RSA_keys keys) {
 
-    std::cout << std::endl << "Encrypting Message..." << std::endl;
+    // std::cout << std::endl << "Encrypting Message..." << std::endl;
 
     std::stringstream ss;
     std::string hexString;
@@ -172,14 +172,14 @@ mpz_class encryption::RSA_Encrypt(std::string& inputMsg, RSA_keys keys) {
 
     mpz_class encrypted;
 
-    std::cout << "Encryption is being performed using: " << std::endl;
-    std::cout << "E: " << keys.publicKey[1] << std::endl;
-    std::cout << "Modulus: " << keys.publicKey[0].get_str().substr(0, 10) << "... " << std::endl;
+    // std::cout << "Encryption is being performed using: " << std::endl;
+    // std::cout << "E: " << keys.publicKey[1] << std::endl;
+    // std::cout << "Modulus: " << keys.publicKey[0].get_str().substr(0, 10) << "... " << std::endl;
 
     // Performs the encryption of the decimal value of the string.
     mpz_powm(encrypted.get_mpz_t(), decHexString.get_mpz_t(), keys.publicKey[1].get_mpz_t(), keys.publicKey[0].get_mpz_t());
 
-    std::cout << std::endl << "Encrypted message is: " << encrypted << std::endl;
+    // std::cout << std::endl << "Encrypted message is: " << encrypted << std::endl;
 
     return encrypted;
 
@@ -188,13 +188,13 @@ mpz_class encryption::RSA_Encrypt(std::string& inputMsg, RSA_keys keys) {
 // Used to decrypt the mpz_class integer generated during encryption.
 std::string encryption::RSA_Decrypt(mpz_class inputValue, RSA_keys keys) {
 
-    std::cout << std::endl << "Decrypting string... " << std::endl;
+    // std::cout << std::endl << "Decrypting string... " << std::endl;
 
     mpz_class decryptedDecVal;
 
-    std::cout << "Decryption is being performed using: " << std::endl;
-    std::cout << "D: " << keys.privateKey[1].get_str().substr(0, 10) << "... " << std::endl;
-    std::cout << "Modulus: " << keys.privateKey[0].get_str().substr(0, 10) << "... " << std::endl;
+    // std::cout << "Decryption is being performed using: " << std::endl;
+    // std::cout << "D: " << keys.privateKey[1].get_str().substr(0, 10) << "... " << std::endl;
+    // std::cout << "Modulus: " << keys.privateKey[0].get_str().substr(0, 10) << "... " << std::endl;
 
     // Undoes the encryption using the user's private key and modulus.
     mpz_powm(decryptedDecVal.get_mpz_t(), inputValue.get_mpz_t(), keys.privateKey[1].get_mpz_t(), keys.privateKey[0].get_mpz_t());
