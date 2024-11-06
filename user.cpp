@@ -82,21 +82,28 @@ string User::hashPassword(const string &password) {
 void User::registerUser(User user) {
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
-    // Create JSON object for the registration request
     QJsonObject json;
     json["username"] = QString::fromStdString(user.username);
     json["password"] = QString::fromStdString(user.hashedPassword);
     json["encryptionMethod"] = QString::fromStdString(user.encryptionMethod);
     json["regenDuration"] = QString::fromStdString(user.regenDuration);
-    qDebug() << json;
+
+    QJsonObject publicKey;
+    publicKey["n"] = QString::fromStdString(user.RSAKeys.publicKey[0].get_str(16));
+    publicKey["e"] = QString::fromStdString(user.RSAKeys.publicKey[1].get_str(16));
+
+    QJsonObject privateKey;
+    privateKey["n"] = QString::fromStdString(user.RSAKeys.privateKey[0].get_str(16));
+    privateKey["d"] = QString::fromStdString(user.RSAKeys.privateKey[1].get_str(16));
+
+    json["publicKey"] = publicKey;
+    json["privateKey"] = privateKey;
 
     QJsonDocument jsonDoc(json);
 
-    // Set up the network request to the register endpoint
     QNetworkRequest request(QUrl("http://127.0.0.1:8000/register"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-    // Send the POST request
     QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
 
     QObject::connect(reply, &QNetworkReply::finished, [reply]() {
@@ -123,9 +130,7 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
     QJsonObject json;
     json.insert("username", QString::fromStdString(user.username));
     json.insert("password", QString::fromStdString(user.hashedPassword));
-    json["encryptionMethod"] = QString::fromStdString(user.encryptionMethod);
-    json["regenDuration"] = QString::fromStdString(user.regenDuration);
-    qDebug() << json;
+
     QJsonDocument jsonDoc(json);
 
     QNetworkRequest request(QUrl("http://127.0.0.1:8000/login"));
@@ -144,12 +149,22 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
                 qDebug() << "Login successful";
                 successCheck = true;
 
-                // Retrieve encryptionMethod and regenDuration from the response
                 if (jsonObject.contains("encryptionMethod")) {
                     user.setEncryptionMethod(jsonObject["encryptionMethod"].toString().toStdString());
                 }
                 if (jsonObject.contains("regenDuration")) {
                     user.setRegenDuration(jsonObject["regenDuration"].toString().toStdString());
+                }
+
+                if (jsonObject.contains("publicKey")) {
+                    QJsonObject publicKey = jsonObject["publicKey"].toObject();
+                    user.RSAKeys.publicKey[0] = mpz_class(publicKey["n"].toString().toStdString(), 16);
+                    user.RSAKeys.publicKey[1] = mpz_class(publicKey["e"].toString().toStdString(), 16);
+                }
+                if (jsonObject.contains("privateKey")) {
+                    QJsonObject privateKey = jsonObject["privateKey"].toObject();
+                    user.RSAKeys.privateKey[0] = mpz_class(privateKey["n"].toString().toStdString(), 16);
+                    user.RSAKeys.privateKey[1] = mpz_class(privateKey["d"].toString().toStdString(), 16);
                 }
             }
         } else {
@@ -167,6 +182,7 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
         callback(successCheck);
     });
 }
+
 
 
 
