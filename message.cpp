@@ -3,11 +3,6 @@
 
 using namespace std;
 
-//placeholder implementation
-string encryptMessage(const string &message) {
-    return "encrypted_" + message;
-}
-
 string decryptMessage(const string &encryptedMessage) {
     return encryptedMessage.substr(10); //removes prefix
 }
@@ -15,11 +10,12 @@ string decryptMessage(const string &encryptedMessage) {
 //constructor
 Message::Message(const User &from, const string &msgContent)
     : sender(from), timestamp(time(nullptr)) {
-    content = encryptMessage(msgContent);
+    content = msgContent;
 }
 
-string Message::getEncryptedContent() const {
-    return content;
+string Message::getEncryptedContent(User user) {
+    mpz_class encrypted = encryption::RSA_Encrypt(this->content, user.getKeys());
+    return encrypted.get_str(16);
 }
 
 string Message::getDecryptedContent(const string &privateKey) const {

@@ -12,6 +12,7 @@
 #include <QUrl>
 #include <QMessageBox>
 #include "user.h"
+#include "encryption.h"
 
 User* currentUser = new User();
 
@@ -76,7 +77,7 @@ void MainWindow::onSendButtonClicked() {
     // network.reconnect();
 
 
-    if(network.sendMessage(msg) && !content.empty()){
+    if(network.sendMessage(msg, *currentUser) && !content.empty()){
         ui->messageDisplay->append("You: " + QString::fromStdString(content));
         ui->messageInput->clear();
     } else {
@@ -89,8 +90,10 @@ void MainWindow::login() {
     QString password = ui->passwordInput->text();
 
     delete currentUser;
-    //create user object and login
-    currentUser = new User(username.toStdString(), password.toStdString());
+    //create user object and login, creating new keys every login right now as key storage on server is difficult
+    RSA_keys keys = encryption::GenerateKeys();
+
+    currentUser = new User(username.toStdString(), password.toStdString(), keys);
     currentUser->loginUser(*currentUser, [this](bool success) {
         if (success) {
             qDebug() << "Callback: Login was successful!";
@@ -144,7 +147,9 @@ void MainWindow::registerUser() {
 
     //if passwords match, create user object and send data to server to be stored
     if (passwordMatch){
-        currentUser = new User(username.toStdString(), password.toStdString());
+        RSA_keys keys = encryption::GenerateKeys();
+
+        currentUser = new User(username.toStdString(), password.toStdString(), keys);
         currentUser->registerUser(*currentUser);
     }
 }
@@ -154,8 +159,13 @@ void MainWindow::buildSettingsDisplay(){
     QString encryptionMethod = QString::fromStdString(currentUser->getEncryptionMethod());
     QString regenDuration = QString::fromStdString(currentUser->getRegenDuration());
 
+    std::pair<mpz_class, mpz_class> publicKeyPair = currentUser->getPublicKey();
+    QString publicKey = QString::fromStdString(publicKeyPair.first.get_str(16)) + "," +
+                        QString::fromStdString(publicKeyPair.second.get_str(16));
+
     QLabel* encryptionMethodLabel = new QLabel("<b><u>Encryption Method:</u></b><br>");
     QLabel* regenDurationLabel = new QLabel("<b><u>Key Regeneration Period:</u></b><br>");
+    QLabel* publicKeyLabel = new QLabel("<b><u>Key Public Key:</u></b><br>");
 
     encryptionMethodLabel->setWordWrap(true);
     regenDurationLabel->setWordWrap(true);
@@ -169,4 +179,9 @@ void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->addItem(regenDurationItem);
     ui->settingsDisplay->addItem(regenDuration);
     ui->settingsDisplay->setItemWidget(regenDurationItem, regenDurationLabel);
+
+    QListWidgetItem* publicKeyItem = new QListWidgetItem();
+    ui->settingsDisplay->addItem(publicKeyItem);
+    ui->settingsDisplay->addItem(publicKey);
+    ui->settingsDisplay->setItemWidget(publicKeyItem, publicKeyLabel);
 }

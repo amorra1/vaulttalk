@@ -14,7 +14,7 @@ public:
     // destructor
     ~networking();
 
-    bool sendMessage(Message &message);
+    bool sendMessage(Message &message, User user);
 
     /*
     constructor establishes a connection, but if the server is offline while that connection
