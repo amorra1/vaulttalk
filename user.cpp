@@ -9,6 +9,8 @@
 #include <QJsonDocument>
 #include <QUrl>
 #include <QMessageBox>
+#include <QCryptographicHash>
+#include <QString>
 
 using namespace std;
 
@@ -71,11 +73,15 @@ RSA_keys User::getKeys() const {
 
 // Temporary hash function for password (replace with a secure hash later)
 string User::hashPassword(const string &password) {
-    hash<string> hasher;
-    size_t hashedValue = hasher(password);
-    stringstream ss;
-    ss << hex << hashedValue;
-    return ss.str();
+    // Convert std::string to QString
+    QString qPassword = QString::fromStdString(password);
+
+    // Convert the QString to QByteArray and hash it
+    QByteArray passwordBytes = qPassword.toUtf8();
+    QByteArray hashedBytes = QCryptographicHash::hash(passwordBytes, QCryptographicHash::Sha256);
+
+    // Return the hash as a hexadecimal string
+    return QString(hashedBytes.toHex()).toStdString();
 }
 
 // Register user function
