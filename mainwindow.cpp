@@ -154,7 +154,6 @@ void MainWindow::registerUser() {
 
     //if passwords match, create user object and send data to server to be stored
     RSA_keys keys = encryption::GenerateKeys();
-    qDebug() << keys.publicKey;
 
     currentUser = new User(username.toStdString(), password.toStdString(), keys);
     currentUser->registerUser(*currentUser);
@@ -165,16 +164,19 @@ void MainWindow::buildSettingsDisplay(){
     QString encryptionMethod = QString::fromStdString(currentUser->getEncryptionMethod());
     QString regenDuration = QString::fromStdString(currentUser->getRegenDuration());
 
-    std::pair<mpz_class, mpz_class> publicKeyPair = currentUser->getPublicKey();
-    QString publicKey = QString::fromStdString(publicKeyPair.first.get_str(16)) + "," +
-                        QString::fromStdString(publicKeyPair.second.get_str(16));
+    RSA_keys publicKeyPair = currentUser->getKeys();
+    QString publicKey_n = QString::fromStdString(publicKeyPair.publicKey[0].get_str(16));
+    QString publicKey_e = QString::fromStdString(publicKeyPair.publicKey[1].get_str(16));
 
     QLabel* encryptionMethodLabel = new QLabel("<b><u>Encryption Method:</u></b><br>");
     QLabel* regenDurationLabel = new QLabel("<b><u>Key Regeneration Period:</u></b><br>");
-    QLabel* publicKeyLabel = new QLabel("<b><u>Key Public Key:</u></b><br>");
+    QLabel* publicKeyLabel = new QLabel("<b><u>Public Key:</u></b><br>");
+    QLabel* nLabel = new QLabel("<b><u>n Value:</u></b><br>" + publicKey_n);
+    QLabel* eLabel = new QLabel("<b><u>e Value:</u></b><br>" + publicKey_e);
 
     encryptionMethodLabel->setWordWrap(true);
     regenDurationLabel->setWordWrap(true);
+    publicKeyLabel->setWordWrap(true);
 
     QListWidgetItem* encryptionItem = new QListWidgetItem();
     ui->settingsDisplay->addItem(encryptionItem);
@@ -188,6 +190,16 @@ void MainWindow::buildSettingsDisplay(){
 
     QListWidgetItem* publicKeyItem = new QListWidgetItem();
     ui->settingsDisplay->addItem(publicKeyItem);
-    ui->settingsDisplay->addItem(publicKey);
     ui->settingsDisplay->setItemWidget(publicKeyItem, publicKeyLabel);
+
+    QListWidgetItem* nValueItem = new QListWidgetItem();
+    ui->settingsDisplay->addItem(nValueItem);
+    ui->settingsDisplay->addItem(publicKey_n);
+    ui->settingsDisplay->setItemWidget(nValueItem, nLabel);
+
+    QListWidgetItem* eValueItem = new QListWidgetItem();
+    ui->settingsDisplay->addItem(eValueItem);
+    ui->settingsDisplay->addItem(publicKey_e);
+    ui->settingsDisplay->setItemWidget(eValueItem, eLabel);
 }
+
