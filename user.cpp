@@ -28,10 +28,7 @@ User::User(string username, string password, RSA_keys keys)
     : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("never"), RSAKeys(keys) {}
 
 User::~User() {
-    username.clear();
-    hashedPassword.clear();
-    encryptionMethod.clear();
-    regenDuration.clear();
+    //strings are automatically cleaned in c++ when delete is used
 }
 
 // Getter and setter for username

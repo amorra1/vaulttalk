@@ -14,7 +14,7 @@
 #include "user.h"
 #include "encryption.h"
 
-User* currentUser = new User();
+User* currentUser = nullptr;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -128,30 +128,36 @@ void MainWindow::Register() {
     ui->stackedWidget->setCurrentIndex(2);
 }
 void MainWindow::registerUser() {
-    bool passwordMatch = false;
     QString username = ui->signUpUsernameInput->text();
     QString password = ui->signUpPasswordInput->text();
-
-    delete currentUser;
 
     //user input error handling
     if(ui->signUpPasswordInput->text() != ui->signUpConfirmPassusernameInput->text()){
         QMessageBox::critical(nullptr, "Error", "Passwords do not match");
+        return;
     }else if(username.isEmpty()){
         QMessageBox::critical(nullptr, "Error", "Please enter a username");
+        return;
     }else if(password.isEmpty()){
         QMessageBox::critical(nullptr, "Error", "Please enter a password");
-    }else {
-        passwordMatch = true;
+        return;
+    }else if (username.length() < 4){
+        QMessageBox::critical(nullptr, "Error", "Username must be greater than 4 characters");
+        return;
+    } else if (username.length() > 12){
+        QMessageBox::critical(nullptr, "Error", "Username must be less than 12 characters");
+        return;
+    } else if (password.length() < 6){
+        QMessageBox::critical(nullptr, "Error", "Password must be greater than 6 characters");
+        return;
     }
 
     //if passwords match, create user object and send data to server to be stored
-    if (passwordMatch){
-        RSA_keys keys = encryption::GenerateKeys();
+    RSA_keys keys = encryption::GenerateKeys();
+    qDebug() << keys.publicKey;
 
-        currentUser = new User(username.toStdString(), password.toStdString(), keys);
-        currentUser->registerUser(*currentUser);
-    }
+    currentUser = new User(username.toStdString(), password.toStdString(), keys);
+    currentUser->registerUser(*currentUser);
 }
 void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->clear();
