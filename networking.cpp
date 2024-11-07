@@ -5,12 +5,13 @@
 #include <QUrl>
 #include <QDebug>
 #include <QString>
+#include <QJsonObject>
+#include <QJsonDocument>
 
-
-QString host = "ws://localhost:12345";
+QString host = "ws://localhost:8001";
 // constructor
-networking::networking(QObject *parent)
-    : QObject(parent), m_webSocket(new QWebSocket()) {
+networking::networking(User &user, QObject *parent)
+    : QObject(parent), user(user), m_webSocket(new QWebSocket()){
     // use whatever address the webserver is hosted on (localhost for testing)
     QUrl url(host);
 
@@ -32,11 +33,19 @@ networking::~networking() {
 }
 
 // send message function
-bool networking::sendMessage(Message &message, User user) {
+bool networking::sendMessage(const QString &recipient, Message &message, User user) {
     if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
-        QString encryptedMessage = QString::fromStdString(message.getEncryptedContent(user));
-        m_webSocket->sendTextMessage(encryptedMessage);
-        qDebug() << "Sent message: " << encryptedMessage;
+        // create message json
+        QJsonObject messageJson;
+        messageJson["sender"] = QString::fromStdString(user.getUsername());
+        messageJson["recipient"] = recipient;
+        messageJson["message"] = QString::fromStdString(message.getEncryptedContent(user));
+        QJsonDocument jsonDoc(messageJson);
+        QString messageJsonString = QString::fromUtf8(jsonDoc.toJson());
+
+        // send json
+        m_webSocket->sendTextMessage(messageJsonString);
+        qDebug() << "Sent message: " << messageJsonString;
         return true;
     } else {
         qDebug() << "Connection not established. Message was not sent!";
@@ -44,7 +53,7 @@ bool networking::sendMessage(Message &message, User user) {
     }
 }
 
-int networking::reconnect(){
+void networking::reconnect(){
     if (m_webSocket->state() != QAbstractSocket::ConnectedState) {
         m_webSocket->open(QUrl(host));
         qDebug() << "Reconnecting to WebSocket at" << host;
@@ -54,6 +63,25 @@ int networking::reconnect(){
 // webSocket event slots, these output on events (self explanatory)
 void networking::onConnected() {
     qDebug() << "WebSocket connected.";
+
+    // export user data to json to send to server
+    QJsonObject userJson;
+    userJson["username"] = QString::fromStdString(user.getUsername());
+    userJson["encryptionMethod"] = QString::fromStdString(user.getEncryptionMethod());
+    userJson["regenDuration"] = QString::fromStdString(user.getRegenDuration());
+
+    QJsonObject publicKey;
+    publicKey["n"] = QString::fromStdString(user.getPublicKey().first.get_str(16));
+    publicKey["e"] = QString::fromStdString(user.getPublicKey().second.get_str(16));
+
+    userJson["publicKey"] = publicKey;
+
+    QJsonDocument jsonDoc(userJson);
+    QString userJsonString = QString::fromUtf8(jsonDoc.toJson());
+
+    // success message
+    m_webSocket->sendTextMessage(userJsonString);
+    qDebug() << "Sent user data to server: " << userJsonString;
 }
 
 void networking::onDisconnected() {
