@@ -263,6 +263,10 @@ void MainWindow::saveChanges() {
     connect(reply, &QNetworkReply::finished, [this, reply]() {
         if (reply->error() == QNetworkReply::NoError) {
             QMessageBox::information(this, "Success", "User settings updated successfully.");
+            currentUser->setUsername(ui->settingsUsernameBox->text().toStdString());
+            currentUser->setPassword(currentUser->hashPassword(ui->settingsPasswordBox->text().toStdString()));
+            currentUser->setEncryptionMethod(ui->methodDropdown->currentText().toStdString());
+            currentUser->setRegenDuration(ui->regenDurationDropdown->currentText().toStdString());
         } else {
             QString errorMessage = reply->errorString();
             QMessageBox::critical(this, "Error", "Failed to update user settings: " + errorMessage);
@@ -270,4 +274,6 @@ void MainWindow::saveChanges() {
 
         reply->deleteLater();
     });
+
+    buildSettingsDisplay();
 }
