@@ -28,7 +28,11 @@ private slots:
     void Register();
     void registerUser();
     void buildSettingsDisplay();
-
+    void buildSettingsPage();
+    void changeUsername();
+    void changePassword();
+    void settingsChange();
+    void saveChanges();
 
 private:
     Ui::MainWindow *ui;

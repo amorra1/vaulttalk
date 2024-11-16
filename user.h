@@ -19,6 +19,7 @@ public:
     ~User();
 
     std::string getUsername() const;
+    std::string getPassword() const;
     std::pair<mpz_class, mpz_class> getPublicKey() const;
     std::pair<mpz_class, mpz_class> getPrivateKey() const;
     std::string getEncryptionMethod() const;
@@ -26,6 +27,7 @@ public:
     RSA_keys getKeys() const;
 
     void setUsername(std::string name);
+    void setPassword(std::string password);
     void setEncryptionMethod(std::string method);
     void setRegenDuration(std::string duration);
     void setPublicKey(const mpz_class& n, const mpz_class& e);

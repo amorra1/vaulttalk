@@ -44,6 +44,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->signUpPasswordInput->setEchoMode(QLineEdit::Password);
     ui->signUpConfirmPassusernameInput->setEchoMode(QLineEdit::Password);
 
+    //settings page
+    ui->settingsPasswordBox->setEchoMode(QLineEdit::Password);
+    ui->settingsUsernameBox->setReadOnly(true);
+    ui->settingsPasswordBox->setReadOnly(true);
+    ui->methodDropdown->addItems({"RSA", "AES", "Cipher"});
+    ui->regenDurationDropdown->addItems({"Never", "Daily", "Monthly"});
 
     // Connect buttons to switch between pages
     connect(ui->loginButton, &QPushButton::clicked, this, &MainWindow::login);
@@ -54,6 +60,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->signUpButton, &QPushButton::clicked, this, &MainWindow::Register);
     connect(ui->backToLoginButton, &QCommandLinkButton::clicked, this, &MainWindow::logout);
     connect(ui->registerButton, &QPushButton::clicked, this, &MainWindow::registerUser);
+    connect(ui->changeUsername, &QPushButton::clicked, this, &MainWindow::changeUsername);
+    connect(ui->changePassword, &QPushButton::clicked, this, &MainWindow::changePassword);
+    connect(ui->methodDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
+    connect(ui->regenDurationDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
+    connect(ui->saveChanges, &QPushButton::clicked, this, &MainWindow::saveChanges);
 }
 
 MainWindow::~MainWindow()
@@ -103,6 +114,7 @@ void MainWindow::login() {
 
     ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
     buildSettingsDisplay();
+    buildSettingsPage();
 }
 void MainWindow::goToMain() {
     ui->stackedWidget->setCurrentIndex(1);
@@ -202,4 +214,66 @@ void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->addItem(publicKey_e);
     ui->settingsDisplay->setItemWidget(eValueItem, eLabel);
 }
+void MainWindow::buildSettingsPage(){
+    ui->settingsUsernameBox->setText(QString::fromStdString(currentUser->getUsername()));
+    ui->settingsPasswordBox->setText(QString::fromStdString(currentUser->getPassword()));
+    ui->methodDropdown->setCurrentText(QString::fromStdString(currentUser->getEncryptionMethod()));
+    ui->regenDurationDropdown->setCurrentText(QString::fromStdString(currentUser->getRegenDuration()));
+}
+void MainWindow::changeUsername(){
+    ui->settingsUsernameBox->setReadOnly(false);
+    ui->settingsUsernameBox->setFocus();
+    settingsChange();
+}
+void MainWindow::changePassword(){
+    ui->settingsPasswordBox->setReadOnly(false);
+    ui->settingsPasswordBox->setFocus();
+    settingsChange();
+}
+void MainWindow::settingsChange(){
+    ui->saveChanges->setStyleSheet("QPushButton { background-color: red; color: white; }");
+}
+void MainWindow::saveChanges() {
+    ui->saveChanges->setStyleSheet("");
 
+    QString oldUsername = QString::fromStdString(currentUser->getUsername());
+    QString newUsername = ui->settingsUsernameBox->text();
+    QString password = ui->settingsPasswordBox->text();
+    QString encryptionMethod = ui->methodDropdown->currentText();
+    QString regenDuration = ui->regenDurationDropdown->currentText();
+
+    QJsonObject json;
+    json["oldUsername"] = oldUsername;
+    json["newUsername"] = newUsername;
+    json["password"] = password;
+    json["encryptionMethod"] = encryptionMethod;
+    json["regenDuration"] = regenDuration;
+
+    QJsonDocument jsonDoc(json);
+    QByteArray jsonData = jsonDoc.toJson();
+
+    QUrl url("http://127.0.0.1:8000/update-settings");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+
+    QNetworkReply *reply = manager->post(request, jsonData);
+
+    connect(reply, &QNetworkReply::finished, [this, reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            QMessageBox::information(this, "Success", "User settings updated successfully.");
+            currentUser->setUsername(ui->settingsUsernameBox->text().toStdString());
+            currentUser->setPassword(currentUser->hashPassword(ui->settingsPasswordBox->text().toStdString()));
+            currentUser->setEncryptionMethod(ui->methodDropdown->currentText().toStdString());
+            currentUser->setRegenDuration(ui->regenDurationDropdown->currentText().toStdString());
+        } else {
+            QString errorMessage = reply->errorString();
+            QMessageBox::critical(this, "Error", "Failed to update user settings: " + errorMessage);
+        }
+
+        reply->deleteLater();
+    });
+
+    buildSettingsDisplay();
+}
