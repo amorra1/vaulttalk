@@ -44,6 +44,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->signUpPasswordInput->setEchoMode(QLineEdit::Password);
     ui->signUpConfirmPassusernameInput->setEchoMode(QLineEdit::Password);
 
+    //settings page
+    ui->settingsPasswordBox->setEchoMode(QLineEdit::Password);
+    ui->settingsUsernameBox->setReadOnly(true);
+    ui->settingsPasswordBox->setReadOnly(true);
+    ui->methodDropdown->addItems({"RSA", "AES", "Cipher"});
+    ui->regenDurationDropdown->addItems({"Never", "Daily", "Monthly"});
 
     // Connect buttons to switch between pages
     connect(ui->loginButton, &QPushButton::clicked, this, &MainWindow::login);
@@ -54,6 +60,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->signUpButton, &QPushButton::clicked, this, &MainWindow::Register);
     connect(ui->backToLoginButton, &QCommandLinkButton::clicked, this, &MainWindow::logout);
     connect(ui->registerButton, &QPushButton::clicked, this, &MainWindow::registerUser);
+    connect(ui->changeUsername, &QPushButton::clicked, this, &MainWindow::changeUsername);
+    connect(ui->changePassword, &QPushButton::clicked, this, &MainWindow::changePassword);
 }
 
 MainWindow::~MainWindow()
@@ -103,6 +111,7 @@ void MainWindow::login() {
 
     ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
     buildSettingsDisplay();
+    buildSettingsPage();
 }
 void MainWindow::goToMain() {
     ui->stackedWidget->setCurrentIndex(1);
@@ -202,4 +211,19 @@ void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->addItem(publicKey_e);
     ui->settingsDisplay->setItemWidget(eValueItem, eLabel);
 }
-
+void MainWindow::buildSettingsPage(){
+    ui->settingsUsernameBox->setText(QString::fromStdString(currentUser->getUsername()));
+    ui->settingsPasswordBox->setText("fakePassword");
+    ui->methodDropdown->setCurrentText(QString::fromStdString(currentUser->getEncryptionMethod()));
+    ui->regenDurationDropdown->setCurrentText(QString::fromStdString(currentUser->getRegenDuration()));
+}
+void MainWindow::changeUsername(){
+    ui->settingsUsernameBox->setReadOnly(false);
+    ui->settingsUsernameBox->setFocus();
+    ui->saveChanges->setStyleSheet("QPushButton { background-color: red; color: white; }");
+}
+void MainWindow::changePassword(){
+    ui->settingsPasswordBox->setReadOnly(false);
+    ui->settingsPasswordBox->setFocus();
+    ui->saveChanges->setStyleSheet("QPushButton { background-color: red; color: white; }");
+}

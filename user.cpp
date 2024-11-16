@@ -19,7 +19,7 @@ User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDura
 
 // Constructor with username and password, default encryptionMethod and regenDuration
 User::User(string username, string password)
-    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("never") {}
+    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never") {}
 
 // Constructor with username, password, encryption method, and regeneration duration
 User::User(string username, string password, string method, string duration)
@@ -27,7 +27,7 @@ User::User(string username, string password, string method, string duration)
 
 // Constructor with username, password, and keys
 User::User(string username, string password, RSA_keys keys)
-    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("never"), RSAKeys(keys) {}
+    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never"), RSAKeys(keys) {}
 
 User::~User() {
     //strings are automatically cleaned in c++ when delete is used
@@ -36,6 +36,9 @@ User::~User() {
 // Getter and setter for username
 string User::getUsername() const { return this->username; }
 void User::setUsername(string name) { this->username = name; }
+
+// Getter and setter for password
+void User::setPassword(string password) { this->hashedPassword = hashPassword(password); }
 
 // Getter and setter for encryptionMethod
 string User::getEncryptionMethod() const { return this->encryptionMethod; }
