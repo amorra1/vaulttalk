@@ -38,6 +38,7 @@ string User::getUsername() const { return this->username; }
 void User::setUsername(string name) { this->username = name; }
 
 // Getter and setter for password
+string User::getPassword() const { return this->hashedPassword; }
 void User::setPassword(string password) { this->hashedPassword = hashPassword(password); }
 
 // Getter and setter for encryptionMethod

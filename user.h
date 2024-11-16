@@ -19,6 +19,7 @@ public:
     ~User();
 
     std::string getUsername() const;
+    std::string getPassword() const;
     std::pair<mpz_class, mpz_class> getPublicKey() const;
     std::pair<mpz_class, mpz_class> getPrivateKey() const;
     std::string getEncryptionMethod() const;
