@@ -17,7 +17,7 @@ public:
 
     bool sendMessage(const QString &recipient, Message &message, User user);
 
-    User getUserPublicKey(const QString &username);
+    User getUser(const QString &username);
 
     /*
     constructor establishes a connection, but if the server is offline while that connection

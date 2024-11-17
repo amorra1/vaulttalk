@@ -42,7 +42,12 @@ bool networking::sendMessage(const QString &recipient, Message &message, User us
         QJsonObject messageJson;
         messageJson["sender"] = QString::fromStdString(user.getUsername());
         messageJson["recipient"] = recipient;
-        messageJson["message"] = QString::fromStdString(message.getEncryptedContent(getUserPublicKey(recipient)));
+        User recipientUser = getUser(recipient);
+        // in the case that the user does not exist
+        if (recipientUser.getUsername() == ""){
+            return false;
+        }
+        messageJson["message"] = QString::fromStdString(message.getEncryptedContent(recipientUser));
         QJsonDocument jsonDoc(messageJson);
         QString messageJsonString = QString::fromUtf8(jsonDoc.toJson());
 
@@ -103,13 +108,14 @@ void networking::onMessageReceived(const QString &message) {
     QJsonObject jsonObj = doc.object();
     QString sender = jsonObj["from"].toString();
     QString encryptedContent = jsonObj["message"].toString();
-
-
+    if (sender.isEmpty()){
+        return;
+    }
     qDebug() << "sender: " << sender << " message: " << encryptedContent;
     //decode message (to be done)
 }
 
-User networking::getUserPublicKey(const QString &username) {
+User networking::getUser(const QString &username) {
     if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
         QJsonObject requestJson;
         requestJson["username"] = username;
@@ -134,11 +140,6 @@ User networking::getUserPublicKey(const QString &username) {
 
         // debug and check if key recieved
         //qDebug() << responseMessage;
-
-        if (responseMessage.isEmpty()) {
-            qDebug() << "No response received for user public key request.";
-            return User();
-        }
 
         // process
         QJsonDocument responseDoc = QJsonDocument::fromJson(responseMessage.toUtf8());

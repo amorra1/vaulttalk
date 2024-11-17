@@ -15,7 +15,8 @@
 using namespace std;
 
 // Default constructor
-User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDuration("") {}
+User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDuration("") {
+}
 
 // Constructor with username and password, default encryptionMethod and regenDuration
 User::User(string username, string password)
