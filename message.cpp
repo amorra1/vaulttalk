@@ -18,6 +18,10 @@ string Message::getEncryptedContent(User user) {
     return encrypted.get_str(16);
 }
 
+// string Message::getEncryptedContent(User user) {
+//     return content;
+// }
+
 string Message::getDecryptedContent(const string &privateKey) const {
     return decryptMessage(content);
 }

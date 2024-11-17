@@ -29,6 +29,9 @@ User::User(string username, string password, string method, string duration)
 User::User(string username, string password, RSA_keys keys)
     : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never"), RSAKeys(keys) {}
 
+User::User(string username, string encryptionMethod, string regenDuration, RSA_keys keys)
+    : username(username), encryptionMethod(encryptionMethod), regenDuration(regenDuration), RSAKeys(keys) {}
+
 User::~User() {
     //strings are automatically cleaned in c++ when delete is used
 }

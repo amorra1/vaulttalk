@@ -7,6 +7,9 @@
 #include <QString>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QEventLoop>
+
+#include <gmpxx.h>
 
 QString host = "ws://localhost:8001";
 // constructor
@@ -39,7 +42,7 @@ bool networking::sendMessage(const QString &recipient, Message &message, User us
         QJsonObject messageJson;
         messageJson["sender"] = QString::fromStdString(user.getUsername());
         messageJson["recipient"] = recipient;
-        messageJson["message"] = QString::fromStdString(message.getEncryptedContent(user));
+        messageJson["message"] = QString::fromStdString(message.getEncryptedContent(getUserPublicKey(recipient)));
         QJsonDocument jsonDoc(messageJson);
         QString messageJsonString = QString::fromUtf8(jsonDoc.toJson());
 
@@ -62,7 +65,7 @@ void networking::reconnect(){
 
 // webSocket event slots, these output on events (self explanatory)
 void networking::onConnected() {
-    qDebug() << "WebSocket connected.";
+    //qDebug() << "WebSocket connected.";
 
     // export user data to json to send to server
     QJsonObject userJson;
@@ -81,7 +84,8 @@ void networking::onConnected() {
 
     // success message
     m_webSocket->sendTextMessage(userJsonString);
-    qDebug() << "Sent user data to server: " << userJsonString;
+    qDebug() << "Connected to" << host;
+    //qDebug() << "Sent user data to server: " << userJsonString;
 }
 
 void networking::onDisconnected() {
@@ -93,5 +97,86 @@ void networking::onError(QAbstractSocket::SocketError error) {
 }
 
 void networking::onMessageReceived(const QString &message) {
-    qDebug() << "Message received: " << message;
+
+    QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
+
+    QJsonObject jsonObj = doc.object();
+    QString sender = jsonObj["from"].toString();
+    QString encryptedContent = jsonObj["message"].toString();
+
+
+    qDebug() << "sender: " << sender << " message: " << encryptedContent;
+    //decode message (to be done)
 }
+
+User networking::getUserPublicKey(const QString &username) {
+    if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
+        QJsonObject requestJson;
+        requestJson["username"] = username;
+
+        QJsonDocument jsonDoc(requestJson);
+        QString request = QString::fromUtf8(jsonDoc.toJson());
+
+        // send request to server
+        m_webSocket->sendTextMessage(request);
+        qDebug() << "Requesting public key for user:" << username;
+
+        // wait for response (bad code fix with async io)
+        QEventLoop loop;
+        QString responseMessage;
+
+        connect(m_webSocket, &QWebSocket::textMessageReceived, [&loop, &responseMessage](const QString &message) {
+            responseMessage = message;
+            loop.quit();
+        });
+
+        loop.exec();
+
+        // debug and check if key recieved
+        //qDebug() << responseMessage;
+
+        if (responseMessage.isEmpty()) {
+            qDebug() << "No response received for user public key request.";
+            return User();
+        }
+
+        // process
+        QJsonDocument responseDoc = QJsonDocument::fromJson(responseMessage.toUtf8());
+        QJsonObject responseJson = responseDoc.object();
+
+        // if something goes wrong return blank user (not to crash any future code)
+        if (responseJson.contains("error")) {
+            qDebug() << "Error: " << responseJson["error"].toString();
+            return User();
+        }
+
+        // extract data from response
+        QString encryptionMethod = responseJson["encryptionMethod"].toString();
+        QString regenDuration = responseJson["regenDuration"].toString();
+
+        // handle large integers for public key (e and n)
+        QString eStr = responseJson["publicKey"].toObject()["e"].toString();
+        QString nStr = responseJson["publicKey"].toObject()["n"].toString();
+
+        mpz_class e, n;
+        e.set_str(eStr.toStdString(), 16);
+        n.set_str(nStr.toStdString(), 16);
+
+        RSA_keys keys;
+        keys.publicKey[0] = e;
+        keys.publicKey[1] = n;
+
+        // return user
+        User requestedUser(username.toStdString(), encryptionMethod.toStdString(), regenDuration.toStdString(), keys);
+        return requestedUser;
+
+    } else {
+        qDebug() << "Connection not established. Cannot request public key!";
+        return User();
+    }
+}
+
+/* some footer notes:
+ * json stuff is handled through strings currently, but websockets have the ability to
+ * send binary data instead, but im not sure how much better that would be?
+ */

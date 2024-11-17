@@ -5,6 +5,7 @@
 #include <QWebSocket>
 #include "message.h"
 
+
 class networking : public QObject {
     Q_OBJECT
 
@@ -15,6 +16,8 @@ public:
     ~networking();
 
     bool sendMessage(const QString &recipient, Message &message, User user);
+
+    User getUserPublicKey(const QString &username);
 
     /*
     constructor establishes a connection, but if the server is offline while that connection
