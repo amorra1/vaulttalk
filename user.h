@@ -15,6 +15,7 @@ public:
     User(std::string username, std::string hashedPassword);
     User(std::string username, std::string hashedPassword, std::string method, std::string duration);
     User(std::string username, std::string hashedPassword, RSA_keys keys);
+    User(string username, string encryptionMethod, string regenDuration, RSA_keys keys);
 
     ~User();
 

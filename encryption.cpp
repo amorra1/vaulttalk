@@ -147,7 +147,7 @@ RSA_keys encryption::GenerateKeys() {
 }
 
 // Used to encrypt the original message. Returns an mpz_class integer.
-mpz_class encryption::RSA_Encrypt(std::string& inputMsg, RSA_keys keys) {
+mpz_class encryption::RSA_Encrypt(std::string inputMsg, RSA_keys keys) {
 
     // std::cout << std::endl << "Encrypting Message..." << std::endl;
 
@@ -172,14 +172,14 @@ mpz_class encryption::RSA_Encrypt(std::string& inputMsg, RSA_keys keys) {
 
     mpz_class encrypted;
 
-    // std::cout << "Encryption is being performed using: " << std::endl;
-    // std::cout << "E: " << keys.publicKey[1] << std::endl;
-    // std::cout << "Modulus: " << keys.publicKey[0].get_str().substr(0, 10) << "... " << std::endl;
+    std::cout << "Encryption is being performed using: " << std::endl;
+    std::cout << "E: " << keys.publicKey[1] << std::endl;
+    std::cout << "Modulus: " << keys.publicKey[0].get_str().substr(0, 10) << "... " << std::endl;
 
     // Performs the encryption of the decimal value of the string.
     mpz_powm(encrypted.get_mpz_t(), decHexString.get_mpz_t(), keys.publicKey[1].get_mpz_t(), keys.publicKey[0].get_mpz_t());
 
-    // std::cout << std::endl << "Encrypted message is: " << encrypted << std::endl;
+    std::cout << std::endl << "Encrypted message is: " << encrypted << std::endl;
 
     return encrypted;
 
@@ -192,9 +192,9 @@ std::string encryption::RSA_Decrypt(mpz_class inputValue, RSA_keys keys) {
 
     mpz_class decryptedDecVal;
 
-    // std::cout << "Decryption is being performed using: " << std::endl;
-    // std::cout << "D: " << keys.privateKey[1].get_str().substr(0, 10) << "... " << std::endl;
-    // std::cout << "Modulus: " << keys.privateKey[0].get_str().substr(0, 10) << "... " << std::endl;
+    std::cout << "Decryption is being performed using: " << std::endl;
+    std::cout << "D: " << keys.privateKey[1].get_str().substr(0, 10) << "... " << std::endl;
+    std::cout << "Modulus: " << keys.privateKey[0].get_str().substr(0, 10) << "... " << std::endl;
 
     // Undoes the encryption using the user's private key and modulus.
     mpz_powm(decryptedDecVal.get_mpz_t(), inputValue.get_mpz_t(), keys.privateKey[1].get_mpz_t(), keys.privateKey[0].get_mpz_t());

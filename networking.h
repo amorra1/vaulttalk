@@ -5,22 +5,25 @@
 #include <QWebSocket>
 #include "message.h"
 
+
 class networking : public QObject {
     Q_OBJECT
 
 public:
     // constructor
-    explicit networking(QObject *parent = nullptr);
+    networking(User &user, QObject *parent = nullptr);
     // destructor
     ~networking();
 
-    bool sendMessage(Message &message, User user);
+    bool sendMessage(const QString &recipient, Message &message, User user);
+
+    User getUser(const QString &username);
 
     /*
     constructor establishes a connection, but if the server is offline while that connection
     is made then users cannot send messages, this function just attempts to restablish that
     */
-    int reconnect();
+    void reconnect();
 
     // slots used for asynchronous events
 private slots:
@@ -31,8 +34,13 @@ private slots:
     void onMessageReceived(const QString &message);
 
 private:
-
+    User &user;
     QWebSocket *m_webSocket;
+
+signals:
+    void userRequestSucceeded(const User &user); // emitted on successful user retrieval
+    void userRequestFailed(const QString &username); // emitted when a user is not found or error occurs
+
 };
 
 #endif

@@ -3,9 +3,6 @@
 
 using namespace std;
 
-string decryptMessage(const string &encryptedMessage) {
-    return encryptedMessage.substr(10); //removes prefix
-}
 
 //constructor
 Message::Message(const User &from, const string &msgContent)
@@ -13,13 +10,18 @@ Message::Message(const User &from, const string &msgContent)
     content = msgContent;
 }
 
-string Message::getEncryptedContent(User user) {
+string Message::getEncryptedContent(const User &user) const {
     mpz_class encrypted = encryption::RSA_Encrypt(this->content, user.getKeys());
-    return encrypted.get_str(16);
+    return encrypted.get_str(10);
 }
 
-string Message::getDecryptedContent(const string &privateKey) const {
-    return decryptMessage(content);
+// string Message::getEncryptedContent(User user) {
+//     return content;
+// }
+
+string Message::getDecryptedContent(const mpz_class &encryptedMessage, User &user) const {
+    string decrypted = encryption::RSA_Decrypt(encryptedMessage, user.getKeys());
+    return decrypted;
 }
 
 void Message::displayMessage() const {

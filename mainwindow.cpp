@@ -19,6 +19,7 @@ User* currentUser = nullptr;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , network(nullptr)
     //, stackedWidget(new QStackedWidget(this))
 {
     ui->setupUi(this);
@@ -74,7 +75,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::onSendButtonClicked() {
     // User sender(ui->senderInput->text().toStdString(), "testPassword");
-    User receiver(ui->receiverInput->text().toStdString(), "testPassword");
+    User receiver(ui->senderInput->text().toStdString(), "testPassword");
     std::string content = ui->messageInput->text().toStdString();
 
     Message msg(*currentUser, content);
@@ -88,7 +89,7 @@ void MainWindow::onSendButtonClicked() {
     // network.reconnect();
 
 
-    if(network.sendMessage(msg, *currentUser) && !content.empty()){
+    if(network->sendMessage(ui->receiverInput->text(), msg, *currentUser) && !content.empty()){
         ui->messageDisplay->append("You: " + QString::fromStdString(content));
         ui->messageInput->clear();
     } else {
@@ -109,6 +110,8 @@ void MainWindow::login() {
         if (success) {
             qDebug() << "Callback: Login was successful!";
             ui->stackedWidget->setCurrentIndex(1);
+            // update network user
+            network = new networking(*currentUser);
         }
     });
 
@@ -177,8 +180,8 @@ void MainWindow::buildSettingsDisplay(){
     QString regenDuration = QString::fromStdString(currentUser->getRegenDuration());
 
     RSA_keys publicKeyPair = currentUser->getKeys();
-    QString publicKey_n = QString::fromStdString(publicKeyPair.publicKey[0].get_str(16));
-    QString publicKey_e = QString::fromStdString(publicKeyPair.publicKey[1].get_str(16));
+    QString publicKey_n = QString::fromStdString(publicKeyPair.publicKey[0].get_str(10));
+    QString publicKey_e = QString::fromStdString(publicKeyPair.publicKey[1].get_str(10));
 
     QLabel* encryptionMethodLabel = new QLabel("<b><u>Encryption Method:</u></b><br>");
     QLabel* regenDurationLabel = new QLabel("<b><u>Key Regeneration Period:</u></b><br>");

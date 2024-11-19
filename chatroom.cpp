@@ -24,7 +24,16 @@ int Chatroom::addMember(const User &user) {
     return 1;
 }
 
+// remove member
+
+std::vector<User> Chatroom::getMembers() const {
+    return members;
+}
+
+
 // name getter function
 std::string Chatroom::getName() const {
     return this->name;
 }
+
+

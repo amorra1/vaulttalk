@@ -37,7 +37,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QStackedWidget *stackedWidget;
-    networking network;
+    networking *network;
 };
 
 #endif // MAINWINDOW_H
