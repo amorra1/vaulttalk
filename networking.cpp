@@ -98,6 +98,7 @@ void networking::onError(QAbstractSocket::SocketError error) {
 }
 
 void networking::onMessageReceived(const QString &message) {
+    // check if empty
     if (message.isEmpty()) {
         return;
     }
@@ -113,6 +114,7 @@ void networking::onMessageReceived(const QString &message) {
     QString sender = jsonObj["from"].toString();
     QString encryptedMessage = jsonObj["message"].toString();
 
+    // additional check if empty info
     if (sender.isEmpty() || encryptedMessage.isEmpty()) {
         qDebug() << "Empty message or sender";
         return;
@@ -122,6 +124,7 @@ void networking::onMessageReceived(const QString &message) {
     try {
         mpz_class encryptedContent(encryptedMessage.toStdString(), 10);
         string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
+        // TODO: put message contents into message object (currently just returns a string)
         qDebug() << "Sender:" << sender << "Decrypted message:" << QString::fromStdString(decryptedMessage);
     } catch (const std::exception &e) {
         qDebug() << "Error converting encrypted message or decrypting:" << e.what();
@@ -130,7 +133,7 @@ void networking::onMessageReceived(const QString &message) {
 }
 
 
-
+// gets the requested user, including public key
 User networking::getUser(const QString &username) {
     if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
         QJsonObject requestJson;
@@ -143,6 +146,7 @@ User networking::getUser(const QString &username) {
         m_webSocket->sendTextMessage(request);
         qDebug() << "Requesting public key for user:" << username;
 
+        // waits for a response (this part can cause crashes bc of my bad code)
         QEventLoop loop;
         QString responseMessage;
 \
@@ -153,6 +157,7 @@ User networking::getUser(const QString &username) {
 
         loop.exec();
 
+        // it didnt crash and a response was recieved
         qDebug() << "Response received: " << responseMessage;
 
         QJsonDocument responseDoc = QJsonDocument::fromJson(responseMessage.toUtf8());
@@ -163,12 +168,14 @@ User networking::getUser(const QString &username) {
 
         QJsonObject responseJson = responseDoc.object();
 
-
+        // final error check (if unchecked it crashes so)
         if (responseJson.contains("error")) {
             qDebug() << "Error: " << responseJson["error"].toString();
             return User();
         }
 
+
+        // extract information from json
         QString encryptionMethod = responseJson["encryptionMethod"].toString();
         QString regenDuration = responseJson["regenDuration"].toString();
 
@@ -184,6 +191,7 @@ User networking::getUser(const QString &username) {
         keys.publicKey[1] = e;
         keys.publicKey[0] = n;
 
+        //returns user
         User requestedUser(username.toStdString(), encryptionMethod.toStdString(), regenDuration.toStdString(), keys);
         return requestedUser;
 
