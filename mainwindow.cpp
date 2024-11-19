@@ -180,8 +180,8 @@ void MainWindow::buildSettingsDisplay(){
     QString regenDuration = QString::fromStdString(currentUser->getRegenDuration());
 
     RSA_keys publicKeyPair = currentUser->getKeys();
-    QString publicKey_n = QString::fromStdString(publicKeyPair.publicKey[0].get_str(16));
-    QString publicKey_e = QString::fromStdString(publicKeyPair.publicKey[1].get_str(16));
+    QString publicKey_n = QString::fromStdString(publicKeyPair.publicKey[0].get_str(10));
+    QString publicKey_e = QString::fromStdString(publicKeyPair.publicKey[1].get_str(10));
 
     QLabel* encryptionMethodLabel = new QLabel("<b><u>Encryption Method:</u></b><br>");
     QLabel* regenDurationLabel = new QLabel("<b><u>Key Regeneration Period:</u></b><br>");

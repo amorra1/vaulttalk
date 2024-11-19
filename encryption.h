@@ -19,7 +19,7 @@ namespace encryption {
     // Encrypt a message using the user's "keyring".
     // Returns an mpz_class integer.
     // NOTE: PASS IN THE ENTIRE KEYRING NOT JUST THE PUBLIC KEY
-    mpz_class RSA_Encrypt(std::string& inputMsg, RSA_keys keys);
+    mpz_class RSA_Encrypt(std::string inputMsg, RSA_keys keys);
 
     // Decrypt the encrypted value using the private key (returns original message as string)
     std::string RSA_Decrypt(mpz_class inputValue, RSA_keys keys);

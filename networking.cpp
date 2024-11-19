@@ -14,19 +14,13 @@
 QString host = "ws://localhost:8001";
 // constructor
 networking::networking(User &user, QObject *parent)
-    : QObject(parent), user(user), m_webSocket(new QWebSocket()){
-    // use whatever address the webserver is hosted on (localhost for testing)
+    : QObject(parent), user(user), m_webSocket(new QWebSocket()) {
     QUrl url(host);
-
-    // start websocket connection at url
     m_webSocket->open(url);
 
-    // connections for WebSocket events
     connect(m_webSocket, &QWebSocket::connected, this, &networking::onConnected);
     connect(m_webSocket, &QWebSocket::disconnected, this, &networking::onDisconnected);
     connect(m_webSocket, &QWebSocket::errorOccurred, this, &networking::onError);
-
-    // incoming messages
     connect(m_webSocket, &QWebSocket::textMessageReceived, this, &networking::onMessageReceived);
 }
 
@@ -78,9 +72,11 @@ void networking::onConnected() {
     userJson["encryptionMethod"] = QString::fromStdString(user.getEncryptionMethod());
     userJson["regenDuration"] = QString::fromStdString(user.getRegenDuration());
 
+    RSA_keys publicKeyPair = user.getKeys();
+
     QJsonObject publicKey;
-    publicKey["n"] = QString::fromStdString(user.getPublicKey().first.get_str(16));
-    publicKey["e"] = QString::fromStdString(user.getPublicKey().second.get_str(16));
+    publicKey["n"] = QString::fromStdString(publicKeyPair.publicKey[0].get_str(10));
+    publicKey["e"] = QString::fromStdString(publicKeyPair.publicKey[1].get_str(10));
 
     userJson["publicKey"] = publicKey;
 
@@ -102,18 +98,38 @@ void networking::onError(QAbstractSocket::SocketError error) {
 }
 
 void networking::onMessageReceived(const QString &message) {
+    if (message.isEmpty()) {
+        return;
+    }
 
+    // json parsing
     QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
+    if (doc.isNull() || !doc.isObject()) {
+        qDebug() << "Invalid JSON format.";
+        return;
+    }
 
     QJsonObject jsonObj = doc.object();
     QString sender = jsonObj["from"].toString();
-    QString encryptedContent = jsonObj["message"].toString();
-    if (sender.isEmpty()){
+    QString encryptedMessage = jsonObj["message"].toString();
+
+    if (sender.isEmpty() || encryptedMessage.isEmpty()) {
+        qDebug() << "Empty message or sender";
         return;
     }
-    qDebug() << "sender: " << sender << " message: " << encryptedContent;
-    //decode message (to be done)
+
+    // try catch statement in case of error
+    try {
+        mpz_class encryptedContent(encryptedMessage.toStdString(), 10);
+        string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
+        qDebug() << "Sender:" << sender << "Decrypted message:" << QString::fromStdString(decryptedMessage);
+    } catch (const std::exception &e) {
+        qDebug() << "Error converting encrypted message or decrypting:" << e.what();
+        return;
+    }
 }
+
+
 
 User networking::getUser(const QString &username) {
     if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
@@ -123,14 +139,13 @@ User networking::getUser(const QString &username) {
         QJsonDocument jsonDoc(requestJson);
         QString request = QString::fromUtf8(jsonDoc.toJson());
 
-        // send request to server
+
         m_webSocket->sendTextMessage(request);
         qDebug() << "Requesting public key for user:" << username;
 
-        // wait for response (bad code fix with async io)
         QEventLoop loop;
         QString responseMessage;
-
+\
         connect(m_webSocket, &QWebSocket::textMessageReceived, [&loop, &responseMessage](const QString &message) {
             responseMessage = message;
             loop.quit();
@@ -138,36 +153,37 @@ User networking::getUser(const QString &username) {
 
         loop.exec();
 
-        // debug and check if key recieved
-        //qDebug() << responseMessage;
+        qDebug() << "Response received: " << responseMessage;
 
-        // process
         QJsonDocument responseDoc = QJsonDocument::fromJson(responseMessage.toUtf8());
+        if (responseDoc.isNull()) {
+            qDebug() << "Invalid JSON response";
+            return User();
+        }
+
         QJsonObject responseJson = responseDoc.object();
 
-        // if something goes wrong return blank user (not to crash any future code)
+
         if (responseJson.contains("error")) {
             qDebug() << "Error: " << responseJson["error"].toString();
             return User();
         }
 
-        // extract data from response
         QString encryptionMethod = responseJson["encryptionMethod"].toString();
         QString regenDuration = responseJson["regenDuration"].toString();
 
-        // handle large integers for public key (e and n)
+
         QString eStr = responseJson["publicKey"].toObject()["e"].toString();
         QString nStr = responseJson["publicKey"].toObject()["n"].toString();
 
         mpz_class e, n;
-        e.set_str(eStr.toStdString(), 16);
-        n.set_str(nStr.toStdString(), 16);
+        e.set_str(eStr.toStdString(), 10);
+        n.set_str(nStr.toStdString(), 10);
 
         RSA_keys keys;
-        keys.publicKey[0] = e;
-        keys.publicKey[1] = n;
+        keys.publicKey[1] = e;
+        keys.publicKey[0] = n;
 
-        // return user
         User requestedUser(username.toStdString(), encryptionMethod.toStdString(), regenDuration.toStdString(), keys);
         return requestedUser;
 
@@ -176,6 +192,8 @@ User networking::getUser(const QString &username) {
         return User();
     }
 }
+
+
 
 /* some footer notes:
  * json stuff is handled through strings currently, but websockets have the ability to
