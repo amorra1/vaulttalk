@@ -75,9 +75,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::onSendButtonClicked() {
     // User sender(ui->senderInput->text().toStdString(), "testPassword");
+
     User receiver(ui->senderInput->text().toStdString(), "testPassword");
     std::string content = ui->messageInput->text().toStdString();
-
+    if(content.length()>255){
+    QMessageBox::critical(nullptr, "Error", "Input length exceeds allowed character limit");
+    }
     Message msg(*currentUser, content);
 
     // QString text = QString::fromStdString(msg.getEncryptedContent());
