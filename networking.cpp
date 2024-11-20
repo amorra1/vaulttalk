@@ -1,6 +1,7 @@
 #include "networking.h"
 #include "message.h"
 #include "user.h"
+#include "mainwindow.h"
 #include <QWebSocket>
 #include <QUrl>
 #include <QDebug>
@@ -126,6 +127,8 @@ void networking::onMessageReceived(const QString &message) {
         string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
         // TODO: put message contents into message object (currently just returns a string)
         qDebug() << "Sender:" << sender << "Decrypted message:" << QString::fromStdString(decryptedMessage);
+        emit messageReceived(sender, QString::fromStdString(decryptedMessage));
+        qDebug() << "emitted signal";
     } catch (const std::exception &e) {
         qDebug() << "Error converting encrypted message or decrypting:" << e.what();
         return;

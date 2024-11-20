@@ -40,6 +40,7 @@ private:
 signals:
     void userRequestSucceeded(const User &user); // emitted on successful user retrieval
     void userRequestFailed(const QString &username); // emitted when a user is not found or error occurs
+    void messageReceived(QString sender, QString message);
 
 };
 

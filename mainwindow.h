@@ -18,6 +18,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void displayReceivedMessage(QString user, QString message);
 
 private slots:
     void onSendButtonClicked();
