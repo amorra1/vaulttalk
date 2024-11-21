@@ -17,7 +17,7 @@ public:
     Message(const User &from, const string &msgContent);
 
     string getEncryptedContent(const User &user) const;
-    string getDecryptedContent() const;
+    string getDecryptedContent(const User &user) const;
 
     void displayMessage() const;
 };

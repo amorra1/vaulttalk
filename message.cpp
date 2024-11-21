@@ -29,9 +29,9 @@ string Message::getEncryptedContent(const User &user) const {
 //     return content;
 // }
 
-string Message::getDecryptedContent() const {
+string Message::getDecryptedContent(const User &user) const {
     mpz_class encryptedContent(this->content);
-    string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, sender.getKeys());
+    string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
 
     return decryptedMessage;
 }
