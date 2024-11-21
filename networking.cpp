@@ -9,45 +9,52 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QEventLoop>
-
-#include <gmpxx.h>
+#include <QTimer>
+#include <unordered_map>
 
 QString host = "ws://localhost:8001";
+
 // constructor
 networking::networking(User &user, QObject *parent)
-    : QObject(parent), user(user), m_webSocket(new QWebSocket()) {
+    : QObject(parent), user(user), webSocket(new QWebSocket()) {
     QUrl url(host);
-    m_webSocket->open(url);
+    webSocket->open(url);
 
-    connect(m_webSocket, &QWebSocket::connected, this, &networking::onConnected);
-    connect(m_webSocket, &QWebSocket::disconnected, this, &networking::onDisconnected);
-    connect(m_webSocket, &QWebSocket::errorOccurred, this, &networking::onError);
-    connect(m_webSocket, &QWebSocket::textMessageReceived, this, &networking::onMessageReceived);
+    // initialize public key cache
+    cachedPublicKeys = std::unordered_map<QString, RSA_keys>();
+
+    // set up websocket event connections
+    connect(webSocket, &QWebSocket::connected, this, &networking::onConnected);
+    connect(webSocket, &QWebSocket::disconnected, this, &networking::onDisconnected);
+    connect(webSocket, &QWebSocket::errorOccurred, this, &networking::onError);
+    connect(webSocket, &QWebSocket::textMessageReceived, this, &networking::onMessageReceived);
 }
 
 // destructor
 networking::~networking() {
-    delete m_webSocket;
+    delete webSocket;
 }
 
 // send message function
 bool networking::sendMessage(const QString &recipient, Message &message, User user) {
-    if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
+    if (webSocket->state() == QAbstractSocket::ConnectedState) {
         // create message json
         QJsonObject messageJson;
         messageJson["sender"] = QString::fromStdString(user.getUsername());
         messageJson["recipient"] = recipient;
+
+        // fetch the recipient's public key from the cache or request it if not available
         User recipientUser = getUser(recipient);
-        // in the case that the user does not exist
-        if (recipientUser.getUsername() == ""){
-            return false;
+        if (recipientUser.getUsername() == "") {
+            return false; // user not found
         }
+
         messageJson["message"] = QString::fromStdString(message.getEncryptedContent(recipientUser));
         QJsonDocument jsonDoc(messageJson);
         QString messageJsonString = QString::fromUtf8(jsonDoc.toJson());
 
         // send json
-        m_webSocket->sendTextMessage(messageJsonString);
+        webSocket->sendTextMessage(messageJsonString);
         qDebug() << "Sent message: " << messageJsonString;
         return true;
     } else {
@@ -56,11 +63,9 @@ bool networking::sendMessage(const QString &recipient, Message &message, User us
     }
 }
 
-void networking::reconnect(){
-    if (m_webSocket->state() != QAbstractSocket::ConnectedState) {
-        m_webSocket->open(QUrl(host));
-        qDebug() << "Reconnecting to WebSocket at" << host;
-    }
+// function to cache the public key
+void networking::cacheUserPublicKey(const QString &username, const RSA_keys &keys) {
+    cachedPublicKeys[username] = keys;
 }
 
 // webSocket event slots, these output on events (self explanatory)
@@ -138,27 +143,37 @@ void networking::onMessageReceived(const QString &message) {
 
 // gets the requested user, including public key
 User networking::getUser(const QString &username) {
-    if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
+    // check if user is already in cache
+    if (cachedPublicKeys.find(username) != cachedPublicKeys.end()) {
+        // return cached user data
+        return User(username.toStdString(), user.getEncryptionMethod(), user.getRegenDuration(), cachedPublicKeys[username]);
+    }
+
+    if (webSocket->state() == QAbstractSocket::ConnectedState) {
         QJsonObject requestJson;
         requestJson["username"] = username;
 
         QJsonDocument jsonDoc(requestJson);
         QString request = QString::fromUtf8(jsonDoc.toJson());
 
-
-        m_webSocket->sendTextMessage(request);
+        webSocket->sendTextMessage(request);
         qDebug() << "Requesting public key for user:" << username;
 
-        // waits for a response (this part can cause crashes bc of my bad code)
+        // waits for a response (now with 50% less crashing)
         QEventLoop loop;
         QString responseMessage;
-\
-        connect(m_webSocket, &QWebSocket::textMessageReceived, [&loop, &responseMessage](const QString &message) {
+
+        // connect to the lambda and store the connection ID
+        QMetaObject::Connection connection = connect(webSocket, &QWebSocket::textMessageReceived, [&loop, &responseMessage](const QString &message) {
             responseMessage = message;
-            loop.quit();
+            loop.quit();  // exit the event loop after receiving the message
         });
 
+        // execute the event loop, waiting for the response
         loop.exec();
+
+        // disconnect after receiving the response PREVENTING A CRASH
+        disconnect(connection);
 
         // it didnt crash and a response was recieved
         qDebug() << "Response received: " << responseMessage;
@@ -177,11 +192,9 @@ User networking::getUser(const QString &username) {
             return User();
         }
 
-
         // extract information from json
         QString encryptionMethod = responseJson["encryptionMethod"].toString();
         QString regenDuration = responseJson["regenDuration"].toString();
-
 
         QString eStr = responseJson["publicKey"].toObject()["e"].toString();
         QString nStr = responseJson["publicKey"].toObject()["n"].toString();
@@ -194,7 +207,10 @@ User networking::getUser(const QString &username) {
         keys.publicKey[1] = e;
         keys.publicKey[0] = n;
 
-        //returns user
+        // cache the public key for future use
+        cacheUserPublicKey(username, keys);
+
+        // return the user with the public key
         User requestedUser(username.toStdString(), encryptionMethod.toStdString(), regenDuration.toStdString(), keys);
         return requestedUser;
 
@@ -204,9 +220,68 @@ User networking::getUser(const QString &username) {
     }
 }
 
+// websocket event slots, these output on events (self explanatory)
+void networking::onConnected() {
+    // export user data to json to send to server
+    QJsonObject userJson;
+    userJson["username"] = QString::fromStdString(user.getUsername());
+    userJson["encryptionMethod"] = QString::fromStdString(user.getEncryptionMethod());
+    userJson["regenDuration"] = QString::fromStdString(user.getRegenDuration());
 
+    RSA_keys publicKeyPair = user.getKeys();
 
-/* some footer notes:
- * json stuff is handled through strings currently, but websockets have the ability to
- * send binary data instead, but im not sure how much better that would be?
- */
+    QJsonObject publicKey;
+    publicKey["n"] = QString::fromStdString(publicKeyPair.publicKey[0].get_str(10));
+    publicKey["e"] = QString::fromStdString(publicKeyPair.publicKey[1].get_str(10));
+
+    userJson["publicKey"] = publicKey;
+
+    QJsonDocument jsonDoc(userJson);
+    QString userJsonString = QString::fromUtf8(jsonDoc.toJson());
+
+    // send the user data to the server
+    webSocket->sendTextMessage(userJsonString);
+    qDebug() << "Connected to" << host;
+}
+
+void networking::onDisconnected() {
+    qDebug() << "WebSocket disconnected.";
+}
+
+void networking::onError(QAbstractSocket::SocketError error) {
+    qDebug() << "WebSocket error:" << error;
+}
+
+void networking::onMessageReceived(const QString &message) {
+    // check if the message is empty
+    if (message.isEmpty()) {
+        return;
+    }
+
+    // parse the message as json
+    QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
+    if (doc.isNull() || !doc.isObject()) {
+        qDebug() << "Invalid JSON format.";
+        return;
+    }
+
+    QJsonObject jsonObj = doc.object();
+    QString sender = jsonObj["from"].toString();
+    QString encryptedMessage = jsonObj["message"].toString();
+
+    // additional checks for empty information
+    if (sender.isEmpty() || encryptedMessage.isEmpty()) {
+        qDebug() << "Empty message or sender";
+        return;
+    }
+
+    // decrypt the message using the cached public key
+    try {
+        mpz_class encryptedContent(encryptedMessage.toStdString(), 10);
+        string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
+        qDebug() << "Sender:" << sender << "Decrypted message:" << QString::fromStdString(decryptedMessage);
+    } catch (const std::exception &e) {
+        qDebug() << "Error converting encrypted message or decrypting:" << e.what();
+        return;
+    }
+}

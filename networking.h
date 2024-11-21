@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QWebSocket>
 #include "message.h"
-
+#include <unordered_map>
 
 class networking : public QObject {
     Q_OBJECT
@@ -21,13 +21,12 @@ public:
 
     /*
     constructor establishes a connection, but if the server is offline while that connection
-    is made then users cannot send messages, this function just attempts to restablish that
+    is made then users cannot send messages, this function just attempts to re-establish that
     */
     void reconnect();
 
     // slots used for asynchronous events
 private slots:
-
     void onConnected();
     void onDisconnected();
     void onError(QAbstractSocket::SocketError error);
@@ -35,13 +34,17 @@ private slots:
 
 private:
     User &user;
-    QWebSocket *m_webSocket;
+    QWebSocket *webSocket;
+    // cache for storing public keys of users
+    std::unordered_map<QString, RSA_keys> cachedPublicKeys;
+
+    // helper function to cache the public key of a user
+    void cacheUserPublicKey(const QString &username, const RSA_keys &keys);
 
 signals:
-    void userRequestSucceeded(const User &user); // emitted on successful user retrieval
-    void userRequestFailed(const QString &username); // emitted when a user is not found or error occurs
-    void messageReceived(QString sender, QString message);
-
+    // signal if fail or succeed
+    void userRequestSucceeded(const User &user);
+    void userRequestFailed(const QString &username);
 };
 
 #endif
