@@ -86,7 +86,7 @@ void MainWindow::onSendButtonClicked() {
      temporary placement of reconnect, maybe in the future the client should
      try to reconnect every X amount of time
      */
-    // network.reconnect();
+    //network->reconnect();
 
 
     if(network->sendMessage(ui->receiverInput->text(), msg, *currentUser) && !content.empty()){
