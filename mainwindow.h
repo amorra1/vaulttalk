@@ -34,6 +34,9 @@ private slots:
     void changePassword();
     void settingsChange();
     void saveChanges();
+    void buildContactList();
+    void getConactsList();
+    void addContact();
 
 private:
     Ui::MainWindow *ui;

@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->methodDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->regenDurationDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->saveChanges, &QPushButton::clicked, this, &MainWindow::saveChanges);
-
+    connect(ui->addContact, &QPushButton::clicked, this, &MainWindow::saveChanges);
 }
 
 MainWindow::~MainWindow()
@@ -153,6 +153,7 @@ void MainWindow::login() {
     ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
     buildSettingsDisplay();
     buildSettingsPage();
+    buildContactList();
 }
 void MainWindow::goToMain() {
     ui->stackedWidget->setCurrentIndex(1);
@@ -314,4 +315,24 @@ void MainWindow::saveChanges() {
     });
 
     buildSettingsDisplay();
+}
+void MainWindow::buildContactList(){
+
+    QWidget *container = ui->scrollArea->widget();
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(container->layout());
+
+    if (!layout) {
+        layout = new QVBoxLayout(container);
+        container->setLayout(layout);
+    }
+
+    // Add buttons dynamically
+    for (int i = 0; i < 20; ++i) {
+        QPushButton *button = new QPushButton(QString("Button %1").arg(i + 1), container);
+        layout->addWidget(button);
+    }
+
+}
+void Mainwindow::addContact(){
+
 }

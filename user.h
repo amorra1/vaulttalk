@@ -10,6 +10,13 @@
 using namespace std;
 
 class User {
+
+struct Contact {
+    QString name;
+    QString publicKeyN;
+    QString publicKeyE;
+};
+
 public:
     User(); // Default constructor
     User(std::string username, std::string hashedPassword);
@@ -26,6 +33,8 @@ public:
     std::string getEncryptionMethod() const;
     std::string getRegenDuration() const;
     RSA_keys getKeys() const;
+    QList<Contact> getContactsList(const QString& username);
+    void addContact(const QString& username, const QString& contactName);
 
     void setUsername(std::string name);
     void setPassword(std::string password);
