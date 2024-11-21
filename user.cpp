@@ -26,6 +26,9 @@ struct Contact {
 User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDuration("") {
 }
 
+User::User(string username) : username(username), hashedPassword(""), encryptionMethod(""), regenDuration("") {
+}
+
 // Constructor with username and password, default encryptionMethod and regenDuration
 User::User(string username, string password)
     : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never") {}
