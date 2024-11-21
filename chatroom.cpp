@@ -1,6 +1,6 @@
 #include "chatroom.h"
 
-Chatroom::Chatroom(string &name, int &key)
+Chatroom::Chatroom(string &name, mpz_class &key)
     : name(name), key(key) {
 }
 
