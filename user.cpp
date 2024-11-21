@@ -12,6 +12,7 @@
 #include <QCryptographicHash>
 #include <QString>
 #include <QEventLoop>
+#include <QUrlQuery>
 
 using namespace std;
 
@@ -206,18 +207,14 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
 QList<User::Contact> User::getContactsList(const QString& username) {
     QNetworkAccessManager networkManager;
 
-    // Construct the API endpoint URL
     QString url = QString("http://127.0.0.1:8000/get-contacts/%1").arg(username);
 
-    // Correct construction of QUrl and QNetworkRequest
     QUrl requestUrl(url);
-    QNetworkRequest request(requestUrl);  // Pass the QUrl to QNetworkRequest
+    QNetworkRequest request(requestUrl);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-    // Sending the GET request
     QNetworkReply* reply = networkManager.get(request);
 
-    // Blocking call to wait for the reply (since we're not using callbacks)
     QEventLoop loop;
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
@@ -250,16 +247,15 @@ QList<User::Contact> User::getContactsList(const QString& username) {
 void User::addContact(const QString& username, const QString& contactName) {
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
-    // Send only the username and contact name to search and add the contact
-    QNetworkRequest request(QUrl("http://127.0.0.1:8000/add-contact/" + username));
+    QUrl url("http://127.0.0.1:8000/add-contact/" + username);
+    QUrlQuery query;
+    query.addQueryItem("contactUsername", contactName);
+    url.setQuery(query);
+
+    QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-    QJsonObject contactJson;
-    contactJson["contactName"] = contactName;
-
-    QJsonDocument jsonDoc(contactJson);
-
-    QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
+    QNetworkReply* reply = networkManager->post(request, QByteArray());
 
     QEventLoop loop;
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
