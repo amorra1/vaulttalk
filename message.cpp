@@ -11,17 +11,29 @@ Message::Message(const User &from, const string &msgContent)
 }
 
 string Message::getEncryptedContent(const User &user) const {
-    mpz_class encrypted = encryption::RSA_Encrypt(this->content, user.getKeys());
-    return encrypted.get_str(10);
+    string method = user.getEncryptionMethod();
+    string encryptedString = this->content;
+
+    if (method == "RSA"){
+        mpz_class encrypted = encryption::RSA_Encrypt(this->content, user.getKeys());
+        encryptedString = encrypted.get_str(10);
+    }
+    else if (method == "AES"){
+        // AES encryption call here
+    }
+
+    return encryptedString;
 }
 
 // string Message::getEncryptedContent(User user) {
 //     return content;
 // }
 
-string Message::getDecryptedContent(const mpz_class &encryptedMessage, User &user) const {
-    string decrypted = encryption::RSA_Decrypt(encryptedMessage, user.getKeys());
-    return decrypted;
+string Message::getDecryptedContent() const {
+    mpz_class encryptedContent(this->content);
+    string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, sender.getKeys());
+
+    return decryptedMessage;
 }
 
 void Message::displayMessage() const {

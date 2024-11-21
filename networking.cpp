@@ -124,12 +124,12 @@ void networking::onMessageReceived(const QString &message) {
         qDebug() << "Empty message or sender";
         return;
     }
+    User toUser = getUser(sender);
+    Message toMessage = Message(toUser, encryptedMessage.toStdString());
 
     // try catch statement in case of error
     try {
-        mpz_class encryptedContent(encryptedMessage.toStdString(), 10);
-        string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
-        // TODO: put message contents into message object (currently just returns a string)
+        string decryptedMessage = toMessage.getDecryptedContent();
         qDebug() << "Sender:" << sender << "Decrypted message:" << QString::fromStdString(decryptedMessage);
         emit messageReceived(sender, QString::fromStdString(decryptedMessage));
         qDebug() << "emitted signal";
