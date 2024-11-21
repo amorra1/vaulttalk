@@ -66,6 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->methodDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->regenDurationDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->saveChanges, &QPushButton::clicked, this, &MainWindow::saveChanges);
+
 }
 
 MainWindow::~MainWindow()
@@ -75,9 +76,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::onSendButtonClicked() {
     // User sender(ui->senderInput->text().toStdString(), "testPassword");
+
     User receiver(ui->senderInput->text().toStdString(), "testPassword");
     std::string content = ui->messageInput->text().toStdString();
-
+    if(content.length()>255){
+    QMessageBox::critical(nullptr, "Error", "Input length exceeds allowed character limit");
+    }
     Message msg(*currentUser, content);
 
     // QString text = QString::fromStdString(msg.getEncryptedContent());
@@ -90,11 +94,41 @@ void MainWindow::onSendButtonClicked() {
 
 
     if(network->sendMessage(ui->receiverInput->text(), msg, *currentUser) && !content.empty()){
-        ui->messageDisplay->append("You: " + QString::fromStdString(content));
+        QTextCursor cursor = ui->messageDisplay->textCursor();
+        cursor.movePosition(QTextCursor::End);
+
+        QTextCharFormat userFormat;
+        userFormat.setForeground(Qt::green);
+        cursor.insertText("You: ", userFormat);
+
+        QTextCharFormat messageFormat;
+        messageFormat.setForeground(Qt::white);
+        cursor.insertText(QString::fromStdString(content) + "\n", messageFormat);
+
+        ui->messageDisplay->setTextCursor(cursor);
+        ui->messageDisplay->ensureCursorVisible();
+
         ui->messageInput->clear();
     } else {
         QMessageBox::critical(nullptr, "Error", "Message failed to send.");
     }
+}
+void MainWindow::displayReceivedMessage(QString user, QString message){
+    qDebug() << "signal hit";
+
+    QTextCursor cursor = ui->messageDisplay->textCursor();
+    cursor.movePosition(QTextCursor::End);
+
+    QTextCharFormat userFormat;
+    userFormat.setForeground(Qt::yellow);
+    cursor.insertText(user + ": ", userFormat);
+
+    QTextCharFormat messageFormat;
+    messageFormat.setForeground(Qt::white);
+    cursor.insertText(message + "\n", messageFormat);
+
+    ui->messageDisplay->setTextCursor(cursor);
+    ui->messageDisplay->ensureCursorVisible();
 }
 void MainWindow::login() {
     //get inputs
@@ -112,6 +146,7 @@ void MainWindow::login() {
             ui->stackedWidget->setCurrentIndex(1);
             // update network user
             network = new networking(*currentUser);
+            connect(network, &networking::messageReceived, this, &MainWindow::displayReceivedMessage);
         }
     });
 
