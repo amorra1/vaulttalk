@@ -175,6 +175,18 @@ void MainWindow::logout() {
 
     ui->messageDisplay->clear();
 
+    //clear contacts widget
+    QWidget *container = ui->scrollArea->widget();
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(container->layout());
+    if (layout) {
+        while (QLayoutItem *item = layout->takeAt(0)) {
+            if (QWidget *widget = item->widget()) {
+                widget->deleteLater();
+            }
+            delete item;
+        }
+    }
+
     ui->stackedWidget->setCurrentIndex(0);
 }
 void MainWindow::Register() {
@@ -334,10 +346,23 @@ void MainWindow::buildContactList(){
         QPushButton *button = new QPushButton(contactsList[i].name, container);
         layout->addWidget(button);
 
+        // connect to insert name into receiver field when clicked
         QObject::connect(button, &QPushButton::clicked, this, [this, name = contactsList[i].name]() {
             insertReceiver(name);
         });
     }
+}
+void MainWindow::addContactToList(QString name){
+    QWidget *container = ui->scrollArea->widget();
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(container->layout());
+
+    QPushButton *button = new QPushButton(name, container);
+    layout->addWidget(button);
+
+    // connect to insert name into receiver field when clicked
+    QObject::connect(button, &QPushButton::clicked, this, [this, name = name]() {
+        insertReceiver(name);
+    });
 }
 void MainWindow::addContact() {
     QDialog *dialog = new QDialog(this);
@@ -378,8 +403,9 @@ void MainWindow::checkContact(QLineEdit *contactUsernameInput) {
     QString contactName = contactUsernameInput->text();
     qDebug() << contactName;
 
-    currentUser->addContact(QString::fromStdString(currentUser->getUsername()), contactName);
-    buildContactList();
+    if(currentUser->addContact(QString::fromStdString(currentUser->getUsername()), contactName)){
+        addContactToList(contactName);
+    }
 }
 void MainWindow::insertReceiver(QString name){
     ui->receiverInput->setText(name);
