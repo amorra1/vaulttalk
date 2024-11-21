@@ -244,7 +244,7 @@ QList<User::Contact> User::getContactsList(const QString& username) {
     reply->deleteLater();
     return contactsList;
 }
-void User::addContact(const QString& username, const QString& contactName) {
+bool User::addContact(const QString& username, const QString& contactName) {
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
     QUrl url("http://127.0.0.1:8000/add-contact/" + username);
@@ -261,9 +261,7 @@ void User::addContact(const QString& username, const QString& contactName) {
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 
-    if (reply->error() == QNetworkReply::NoError) {
-        QMessageBox::information(nullptr, "Success", "Contact added successfully!");
-    } else {
+    if (reply->error() != QNetworkReply::NoError) {
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
         QJsonObject jsonObject = jsonResponse.object();
@@ -272,8 +270,9 @@ void User::addContact(const QString& username, const QString& contactName) {
                                    : "Failed to add contact due to an unknown error.";
 
         QMessageBox::critical(nullptr, "Error", errorMessage);
+        return false;
     }
-
+    return true;
     reply->deleteLater();
 }
 

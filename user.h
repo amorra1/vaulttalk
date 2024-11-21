@@ -36,7 +36,7 @@ public:
     std::string getRegenDuration() const;
     RSA_keys getKeys() const;
     QList<Contact> getContactsList(const QString& username);
-    void addContact(const QString& username, const QString& contactName);
+    bool addContact(const QString& username, const QString& contactName);
 
     void setUsername(std::string name);
     void setPassword(std::string password);
