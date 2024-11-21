@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QStackedWidget>
+#include <QLineEdit>
 #include "networking.h"
 #include "user.h"
 #include "message.h"
@@ -35,8 +36,8 @@ private slots:
     void settingsChange();
     void saveChanges();
     void buildContactList();
-    void getConactsList();
     void addContact();
+    void checkContact(QLineEdit *contactUsernameInput);
 
 private:
     Ui::MainWindow *ui;

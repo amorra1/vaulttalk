@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->methodDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->regenDurationDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->saveChanges, &QPushButton::clicked, this, &MainWindow::saveChanges);
-    connect(ui->addContact, &QPushButton::clicked, this, &MainWindow::saveChanges);
+    connect(ui->addContact, &QPushButton::clicked, this, &MainWindow::addContact);
 }
 
 MainWindow::~MainWindow()
@@ -333,6 +333,58 @@ void MainWindow::buildContactList(){
     }
 
 }
-void Mainwindow::addContact(){
+void MainWindow::addContact() {
+    QDialog *dialog = new QDialog(this);
+    dialog->setWindowTitle("Add Contact");
 
+    // Create input field for the contact's username
+    QLineEdit *contactUsernameInput = new QLineEdit(dialog);
+    contactUsernameInput->setPlaceholderText("Enter username to add");
+
+    // Create the Add button
+    QPushButton *addButton = new QPushButton("Add", dialog);
+
+    // Create the Cancel button
+    QPushButton *cancelButton = new QPushButton("Cancel", dialog);
+
+    // Create a layout and add widgets to the dialog
+    QVBoxLayout *layout = new QVBoxLayout(dialog);
+    layout->addWidget(contactUsernameInput);
+    layout->addWidget(addButton);
+    layout->addWidget(cancelButton);
+
+    dialog->setLayout(layout);
+
+    // Connect the Cancel button to close the dialog
+    connect(cancelButton, &QPushButton::clicked, dialog, &QDialog::accept);
+
+    // Connect the Add button to process the contact adding
+    connect(addButton, &QPushButton::clicked, this, [this, dialog, contactUsernameInput]() {
+        QString contactUsername = contactUsernameInput->text();
+
+        // Here, you can add logic to check if the username is valid and then add the contact.
+        if (contactUsername.isEmpty()) {
+            QMessageBox::critical(this, "Error", "Please enter a username.");
+        } else {
+            checkContact(contactUsernameInput);
+            QMessageBox::information(this, "Success", "Contact added: " + contactUsername);
+        }
+
+        dialog->accept();
+    });
+
+    dialog->exec();
+}
+
+void MainWindow::checkContact(QLineEdit *contactUsernameInput) {
+    QString contactName = contactUsernameInput->text();
+    qDebug() << contactName;
+    // // Assume you have a method to check if the contact exists, for example:
+    // if (/* Contact exists in your system */) {
+    //     // addContactToDatabase(contactName);
+    //     QMessageBox::information(this, "Success", "Contact added successfully!");
+    // } else {
+    //     // Show an error message if the contact doesn't exist
+    //     QMessageBox::critical(this, "Error", "Contact does not exist.");
+    // }
 }
