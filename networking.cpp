@@ -1,7 +1,6 @@
 #include "networking.h"
 #include "message.h"
 #include "user.h"
-#include "mainwindow.h"
 #include <QWebSocket>
 #include <QUrl>
 #include <QDebug>

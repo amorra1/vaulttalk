@@ -9,13 +9,13 @@
 class Chatroom {
 private:
     std::string name;
-    int key;
+    mpz_class key;
     std::vector<User> members;
     std::vector<Message> chatLog;
 
 public:
     // constructor
-    Chatroom(std::string &name, int &key);
+    Chatroom(std::string &name, mpz_class &key);
     int addMessage(const Message &message);
 
     int addMember(const User &user);
