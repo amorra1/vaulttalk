@@ -23,7 +23,7 @@ networking::networking(User &user, QObject *parent)
     // initialize public key cache
     cachedPublicKeys = std::unordered_map<QString, RSA_keys>();
 
-    // set up websocket event connections
+    // this eyesore sets up websocket slots
     connect(webSocket, &QWebSocket::connected, this, &networking::onConnected);
     connect(webSocket, &QWebSocket::disconnected, this, &networking::onDisconnected);
     connect(webSocket, &QWebSocket::errorOccurred, this, &networking::onError);
@@ -43,10 +43,10 @@ bool networking::sendMessage(const QString &recipient, Message &message, User us
         messageJson["sender"] = QString::fromStdString(user.getUsername());
         messageJson["recipient"] = recipient;
 
-        // fetch the recipient's public key from the cache or request it if not available
+        // fetch the recipient's public key
         User recipientUser = getUser(recipient);
         if (recipientUser.getUsername() == "") {
-            return false; // user not found
+            return false;
         }
 
         messageJson["message"] = QString::fromStdString(message.getEncryptedContent(recipientUser));
@@ -90,7 +90,7 @@ void networking::onConnected() {
     QString userJsonString = QString::fromUtf8(jsonDoc.toJson());
 
     // success message
-    m_webSocket->sendTextMessage(userJsonString);
+    webSocket->sendTextMessage(userJsonString);
     qDebug() << "Connected to" << host;
     //qDebug() << "Sent user data to server: " << userJsonString;
 }
@@ -217,71 +217,5 @@ User networking::getUser(const QString &username) {
     } else {
         qDebug() << "Connection not established. Cannot request public key!";
         return User();
-    }
-}
-
-// websocket event slots, these output on events (self explanatory)
-void networking::onConnected() {
-    // export user data to json to send to server
-    QJsonObject userJson;
-    userJson["username"] = QString::fromStdString(user.getUsername());
-    userJson["encryptionMethod"] = QString::fromStdString(user.getEncryptionMethod());
-    userJson["regenDuration"] = QString::fromStdString(user.getRegenDuration());
-
-    RSA_keys publicKeyPair = user.getKeys();
-
-    QJsonObject publicKey;
-    publicKey["n"] = QString::fromStdString(publicKeyPair.publicKey[0].get_str(10));
-    publicKey["e"] = QString::fromStdString(publicKeyPair.publicKey[1].get_str(10));
-
-    userJson["publicKey"] = publicKey;
-
-    QJsonDocument jsonDoc(userJson);
-    QString userJsonString = QString::fromUtf8(jsonDoc.toJson());
-
-    // send the user data to the server
-    webSocket->sendTextMessage(userJsonString);
-    qDebug() << "Connected to" << host;
-}
-
-void networking::onDisconnected() {
-    qDebug() << "WebSocket disconnected.";
-}
-
-void networking::onError(QAbstractSocket::SocketError error) {
-    qDebug() << "WebSocket error:" << error;
-}
-
-void networking::onMessageReceived(const QString &message) {
-    // check if the message is empty
-    if (message.isEmpty()) {
-        return;
-    }
-
-    // parse the message as json
-    QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
-    if (doc.isNull() || !doc.isObject()) {
-        qDebug() << "Invalid JSON format.";
-        return;
-    }
-
-    QJsonObject jsonObj = doc.object();
-    QString sender = jsonObj["from"].toString();
-    QString encryptedMessage = jsonObj["message"].toString();
-
-    // additional checks for empty information
-    if (sender.isEmpty() || encryptedMessage.isEmpty()) {
-        qDebug() << "Empty message or sender";
-        return;
-    }
-
-    // decrypt the message using the cached public key
-    try {
-        mpz_class encryptedContent(encryptedMessage.toStdString(), 10);
-        string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
-        qDebug() << "Sender:" << sender << "Decrypted message:" << QString::fromStdString(decryptedMessage);
-    } catch (const std::exception &e) {
-        qDebug() << "Error converting encrypted message or decrypting:" << e.what();
-        return;
     }
 }

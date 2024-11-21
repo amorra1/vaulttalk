@@ -45,6 +45,8 @@ signals:
     // signal if fail or succeed
     void userRequestSucceeded(const User &user);
     void userRequestFailed(const QString &username);
+    void messageReceived(QString sender, QString message);
+
 };
 
 #endif
