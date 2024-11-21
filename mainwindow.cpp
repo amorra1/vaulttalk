@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->methodDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->regenDurationDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->saveChanges, &QPushButton::clicked, this, &MainWindow::saveChanges);
-
+    connect(ui->addContact, &QPushButton::clicked, this, &MainWindow::addContact);
 }
 
 MainWindow::~MainWindow()
@@ -153,6 +153,7 @@ void MainWindow::login() {
     ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
     buildSettingsDisplay();
     buildSettingsPage();
+    buildContactList();
 }
 void MainWindow::goToMain() {
     ui->stackedWidget->setCurrentIndex(1);
@@ -171,6 +172,8 @@ void MainWindow::logout() {
     if(!(ui->rememberMeCheck->isChecked())){
         ui->usernameInput->clear();
     }
+
+    ui->messageDisplay->clear();
 
     ui->stackedWidget->setCurrentIndex(0);
 }
@@ -314,4 +317,70 @@ void MainWindow::saveChanges() {
     });
 
     buildSettingsDisplay();
+}
+void MainWindow::buildContactList(){
+
+    QWidget *container = ui->scrollArea->widget();
+    QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(container->layout());
+
+    if (!layout) {
+        layout = new QVBoxLayout(container);
+        container->setLayout(layout);
+    }
+
+    QList<User::Contact> contactsList = currentUser->getContactsList(QString::fromStdString(currentUser->getUsername()));
+
+    for (int i = 0; i < contactsList.size(); ++i) {
+        QPushButton *button = new QPushButton(contactsList[i].name, container);
+        layout->addWidget(button);
+
+        QObject::connect(button, &QPushButton::clicked, this, [this, name = contactsList[i].name]() {
+            insertReceiver(name);
+        });
+    }
+}
+void MainWindow::addContact() {
+    QDialog *dialog = new QDialog(this);
+    dialog->setWindowTitle("Add Contact");
+
+    QLineEdit *contactUsernameInput = new QLineEdit(dialog);
+    contactUsernameInput->setPlaceholderText("Enter username to add");
+
+    QPushButton *addButton = new QPushButton("Add", dialog);
+
+    QPushButton *cancelButton = new QPushButton("Cancel", dialog);
+
+    QVBoxLayout *layout = new QVBoxLayout(dialog);
+    layout->addWidget(contactUsernameInput);
+    layout->addWidget(addButton);
+    layout->addWidget(cancelButton);
+
+    dialog->setLayout(layout);
+
+    connect(cancelButton, &QPushButton::clicked, dialog, &QDialog::accept);
+
+    connect(addButton, &QPushButton::clicked, this, [this, dialog, contactUsernameInput]() {
+        QString contactUsername = contactUsernameInput->text();
+
+        if (contactUsername.isEmpty()) {
+            QMessageBox::critical(this, "Error", "Please enter a username.");
+        } else {
+            checkContact(contactUsernameInput);
+        }
+
+        dialog->accept();
+    });
+
+    dialog->exec();
+}
+
+void MainWindow::checkContact(QLineEdit *contactUsernameInput) {
+    QString contactName = contactUsernameInput->text();
+    qDebug() << contactName;
+
+    currentUser->addContact(QString::fromStdString(currentUser->getUsername()), contactName);
+    buildContactList();
+}
+void MainWindow::insertReceiver(QString name){
+    ui->receiverInput->setText(name);
 }

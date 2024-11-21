@@ -11,8 +11,16 @@
 #include <QMessageBox>
 #include <QCryptographicHash>
 #include <QString>
+#include <QEventLoop>
+#include <QUrlQuery>
 
 using namespace std;
+
+struct Contact {
+    QString name;
+    QString publicKeyN;
+    QString publicKeyE;
+};
 
 // Default constructor
 User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDuration("") {
@@ -196,7 +204,78 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
         callback(successCheck);
     });
 }
+QList<User::Contact> User::getContactsList(const QString& username) {
+    QNetworkAccessManager networkManager;
 
+    QString url = QString("http://127.0.0.1:8000/get-contacts/%1").arg(username);
+
+    QUrl requestUrl(url);
+    QNetworkRequest request(requestUrl);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QNetworkReply* reply = networkManager.get(request);
+
+    QEventLoop loop;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    QList<User::Contact> contactsList;
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray responseData = reply->readAll();
+        QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObject = jsonResponse.object();
+
+        if (jsonObject.contains("contacts")) {
+            QJsonObject contacts = jsonObject["contacts"].toObject();
+
+            for (const QString& contactName : contacts.keys()) {
+                QJsonObject contactInfo = contacts[contactName].toObject();
+                QString publicKeyN = contactInfo["publicKey"].toObject()["n"].toString();
+                QString publicKeyE = contactInfo["publicKey"].toObject()["e"].toString();
+
+                contactsList.append({contactName, publicKeyN, publicKeyE});
+            }
+        }
+    } else {
+        QMessageBox::critical(nullptr, "Error", "Failed to retrieve contacts.");
+    }
+
+    reply->deleteLater();
+    return contactsList;
+}
+void User::addContact(const QString& username, const QString& contactName) {
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+
+    QUrl url("http://127.0.0.1:8000/add-contact/" + username);
+    QUrlQuery query;
+    query.addQueryItem("contactUsername", contactName);
+    url.setQuery(query);
+
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QNetworkReply* reply = networkManager->post(request, QByteArray());
+
+    QEventLoop loop;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QMessageBox::information(nullptr, "Success", "Contact added successfully!");
+    } else {
+        QByteArray responseData = reply->readAll();
+        QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
+        QJsonObject jsonObject = jsonResponse.object();
+        QString errorMessage = jsonObject.contains("detail")
+                                   ? jsonObject["detail"].toString()
+                                   : "Failed to add contact due to an unknown error.";
+
+        QMessageBox::critical(nullptr, "Error", errorMessage);
+    }
+
+    reply->deleteLater();
+}
 
 
 

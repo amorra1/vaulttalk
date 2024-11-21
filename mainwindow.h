@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QStackedWidget>
+#include <QLineEdit>
 #include "networking.h"
 #include "user.h"
 #include "message.h"
@@ -34,6 +35,10 @@ private slots:
     void changePassword();
     void settingsChange();
     void saveChanges();
+    void buildContactList();
+    void addContact();
+    void checkContact(QLineEdit *contactUsernameInput);
+    void insertReceiver(QString name);
 
 private:
     Ui::MainWindow *ui;
