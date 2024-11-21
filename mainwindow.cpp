@@ -173,6 +173,8 @@ void MainWindow::logout() {
         ui->usernameInput->clear();
     }
 
+    ui->messageDisplay->clear();
+
     ui->stackedWidget->setCurrentIndex(0);
 }
 void MainWindow::Register() {
@@ -332,8 +334,8 @@ void MainWindow::buildContactList(){
         QPushButton *button = new QPushButton(contactsList[i].name, container);
         layout->addWidget(button);
 
-        QObject::connect(button, &QPushButton::clicked, [=]() {
-            qDebug() << "Contact clicked:" << contactsList[i].name;
+        QObject::connect(button, &QPushButton::clicked, this, [this, name = contactsList[i].name]() {
+            insertReceiver(name);
         });
     }
 }
@@ -378,4 +380,7 @@ void MainWindow::checkContact(QLineEdit *contactUsernameInput) {
 
     currentUser->addContact(QString::fromStdString(currentUser->getUsername()), contactName);
     buildContactList();
+}
+void MainWindow::insertReceiver(QString name){
+    ui->receiverInput->setText(name);
 }

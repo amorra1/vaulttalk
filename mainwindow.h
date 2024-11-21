@@ -38,6 +38,7 @@ private slots:
     void buildContactList();
     void addContact();
     void checkContact(QLineEdit *contactUsernameInput);
+    void insertReceiver(QString name);
 
 private:
     Ui::MainWindow *ui;
