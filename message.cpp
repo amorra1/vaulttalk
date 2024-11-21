@@ -30,8 +30,16 @@ string Message::getEncryptedContent(const User &user) const {
 // }
 
 string Message::getDecryptedContent(const User &user) const {
-    mpz_class encryptedContent(this->content);
-    string decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
+    string method = user.getEncryptionMethod();
+    string decryptedMessage = this->content;
+
+    if (method == "RSA"){
+        mpz_class encryptedContent(this->content);
+        decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
+    }
+    else if (method == "AES"){
+        // AES encryption call here
+    }
 
     return decryptedMessage;
 }
