@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "chatroom.h"
 #include "ui_mainwindow.h"
 #include <QVBoxLayout>
 #include <QLineEdit>
@@ -15,6 +16,7 @@
 #include "encryption.h"
 
 User* currentUser = nullptr;
+std::vector<Chatroom> chatrooms;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -74,15 +76,49 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+/* NAVIGATION METHODS */
+void MainWindow::goToMain() {
+    ui->stackedWidget->setCurrentIndex(1);
+}
+void MainWindow::goToSettings() {
+    ui->stackedWidget->setCurrentIndex(3);
+}
+void MainWindow::Register() {
+    ui->stackedWidget->setCurrentIndex(2);
+}
+
+/* SEND AND RECEIVE MESSAGE METHODS */
 void MainWindow::onSendButtonClicked() {
     // User sender(ui->senderInput->text().toStdString(), "testPassword");
+    // User receiver(ui->senderInput->text().toStdString(), "testPassword");
 
-    User receiver(ui->senderInput->text().toStdString(), "testPassword");
+    std::string receiverUsername = ui->receiverInput->text().toStdString();
     std::string content = ui->messageInput->text().toStdString();
+
     if(content.length()>255){
-    QMessageBox::critical(nullptr, "Error", "Input length exceeds allowed character limit");
+        QMessageBox::critical(nullptr, "Error", "Input length exceeds allowed character limit");
     }
+
+    if (receiverUsername.empty() || content.empty()) {
+        QMessageBox::critical(nullptr, "Error", "Receiver and message content cannot be empty.");
+        return;
+    }
+
+    auto it = std::find_if(chatrooms.begin(), chatrooms.end(),
+                           [&receiverUsername](const Chatroom& chatroom) {
+                               return chatroom.getName() == receiverUsername;
+                           });
+
+    Chatroom* chatroom = nullptr;
     Message msg(*currentUser, content);
+
+    if (it != chatrooms.end()) {
+        chatroom = &(*it);
+    } else {
+        Chatroom newChatroom(receiverUsername, currentUser->getUsername(), receiverUsername);
+        chatrooms.push_back(newChatroom);
+        chatroom = &chatrooms.back();
+    }
 
     // QString text = QString::fromStdString(msg.getEncryptedContent());
 
@@ -94,12 +130,15 @@ void MainWindow::onSendButtonClicked() {
 
 
     if(network->sendMessage(ui->receiverInput->text(), msg, *currentUser) && !content.empty()){
+        chatroom->addMessage(msg);
+
         QTextCursor cursor = ui->messageDisplay->textCursor();
         cursor.movePosition(QTextCursor::End);
 
         QTextCharFormat userFormat;
         userFormat.setForeground(Qt::green);
-        cursor.insertText("You: ", userFormat);
+        QString userLabel = QString::fromStdString(currentUser->getUsername()) + ": ";
+        cursor.insertText(userLabel, userFormat);
 
         QTextCharFormat messageFormat;
         messageFormat.setForeground(Qt::white);
@@ -130,6 +169,8 @@ void MainWindow::displayReceivedMessage(QString user, QString message){
     ui->messageDisplay->setTextCursor(cursor);
     ui->messageDisplay->ensureCursorVisible();
 }
+
+/* REGISTER, LOGIN, LOGOUT METHODS */
 void MainWindow::login() {
     //get inputs
     QString username = ui->usernameInput->text();
@@ -154,12 +195,6 @@ void MainWindow::login() {
     buildSettingsDisplay();
     buildSettingsPage();
     buildContactList();
-}
-void MainWindow::goToMain() {
-    ui->stackedWidget->setCurrentIndex(1);
-}
-void MainWindow::goToSettings() {
-    ui->stackedWidget->setCurrentIndex(3);
 }
 void MainWindow::logout() {
     //clear register fields
@@ -190,9 +225,6 @@ void MainWindow::logout() {
     }
 
     ui->stackedWidget->setCurrentIndex(0);
-}
-void MainWindow::Register() {
-    ui->stackedWidget->setCurrentIndex(2);
 }
 void MainWindow::registerUser() {
     QString username = ui->signUpUsernameInput->text();
@@ -225,6 +257,8 @@ void MainWindow::registerUser() {
     currentUser = new User(username.toStdString(), password.toStdString(), keys);
     currentUser->registerUser(*currentUser);
 }
+
+/* QUICK VIEW SETTINGS METHODS */
 void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->clear();
 
@@ -269,6 +303,8 @@ void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->addItem(publicKey_e);
     ui->settingsDisplay->setItemWidget(eValueItem, eLabel);
 }
+
+/* SETTINGS PAGE METHODS */
 void MainWindow::buildSettingsPage(){
     ui->settingsUsernameBox->setText(QString::fromStdString(currentUser->getUsername()));
     ui->settingsPasswordBox->setText(QString::fromStdString(currentUser->getPassword()));
@@ -332,6 +368,8 @@ void MainWindow::saveChanges() {
 
     buildSettingsDisplay();
 }
+
+/* CONTACT METHODS */
 void MainWindow::buildContactList(){
 
     QWidget *container = ui->scrollArea->widget();
@@ -400,7 +438,6 @@ void MainWindow::addContact() {
 
     dialog->exec();
 }
-
 void MainWindow::checkContact(QLineEdit *contactUsernameInput) {
     QString contactName = contactUsernameInput->text();
     qDebug() << contactName;
@@ -410,5 +447,56 @@ void MainWindow::checkContact(QLineEdit *contactUsernameInput) {
     }
 }
 void MainWindow::insertReceiver(QString name){
+    ui->messageDisplay->clear();
     ui->receiverInput->setText(name);
+
+    Chatroom* chatroom = findChatroom(name.toStdString());
+    if(chatroom){
+        switchToChatroom(name.toStdString());
+    } else {
+        createChatroom(name.toStdString());
+    }
+
+}
+
+/* CHATROOM METHODS */
+Chatroom* MainWindow::findChatroom(const std::string& name) {
+    for (auto& chatroom : chatrooms) {
+        if (chatroom.getName() == name) {
+            return &chatroom;
+        }
+    }
+    return nullptr;
+}
+void MainWindow::createChatroom(const std::string& name) {
+    if (!findChatroom(name)) {
+        chatrooms.emplace_back(name);
+    }
+}
+void MainWindow::switchToChatroom(const std::string& chatroomName) {
+    Chatroom* chatroom = findChatroom(chatroomName);
+    if (!chatroom) {
+        QMessageBox::critical(this, "Error", "Chatroom not found.");
+        return;
+    }
+
+    ui->messageDisplay->clear();
+    const auto& messages = chatroom->getChatLog();
+    for (const auto& msg : messages) {
+        QString user = QString::fromStdString(msg.getSender().getUsername());
+        QString content = QString::fromStdString(msg.getContent());
+
+        QTextCursor cursor = ui->messageDisplay->textCursor();
+        cursor.movePosition(QTextCursor::End);
+
+        QTextCharFormat userFormat;
+        userFormat.setForeground(Qt::yellow);
+        cursor.insertText(user + ": ", userFormat);
+
+        QTextCharFormat messageFormat;
+        messageFormat.setForeground(Qt::white);
+        cursor.insertText(content + "\n", messageFormat);
+
+        ui->messageDisplay->setTextCursor(cursor);
+    }
 }

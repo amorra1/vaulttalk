@@ -16,8 +16,12 @@ private:
 public:
     Message(const User &from, const string &msgContent);
 
+    const User& getSender() const;
+    const string& getContent() const;
+    time_t getTimestamp() const;
     string getEncryptedContent(const User &user) const;
     string getDecryptedContent(const User &user) const;
+
 
     void displayMessage() const;
 };
