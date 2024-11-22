@@ -5,6 +5,7 @@
 #include <vector>
 #include "user.h"
 #include "message.h"
+#include <gmpxx.h>
 
 class Chatroom {
 private:
@@ -14,17 +15,16 @@ private:
     std::vector<Message> chatLog;
 
 public:
-    // constructor
-    Chatroom(std::string &name, mpz_class &key);
-    int addMessage(const Message &message);
+    Chatroom(const std::string& chatroomName);
+    Chatroom(const std::string &name, const User &sender, const User &receiver);
 
+    int addMessage(const Message &message);
     int addMember(const User &user);
+    int removeMember(const std::string &username);
 
     std::vector<User> getMembers() const;
-
-
+    std::vector<Message> getChatLog() const;
     std::string getName() const;
-
 };
 
 #endif // CHATROOM_H
