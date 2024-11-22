@@ -44,6 +44,7 @@ private slots:
     void switchToChatroom(const std::string& chatroomName);
     void createChatroom(const std::string& name);
     Chatroom* findChatroom(const std::string& name);
+    void notificationReceived(QString user);
 
 private:
     Ui::MainWindow *ui;

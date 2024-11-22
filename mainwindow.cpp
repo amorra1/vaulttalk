@@ -16,6 +16,7 @@
 #include "encryption.h"
 
 User* currentUser = nullptr;
+Chatroom* currentChatroom = nullptr;
 std::vector<Chatroom> chatrooms;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -127,7 +128,7 @@ void MainWindow::onSendButtonClicked() {
      try to reconnect every X amount of time
      */
     //network->reconnect();
-
+    currentChatroom = chatroom;
 
     if(network->sendMessage(ui->receiverInput->text(), msg, *currentUser) && !content.empty()){
         chatroom->addMessage(msg);
@@ -177,19 +178,25 @@ void MainWindow::displayReceivedMessage(QString user, QString message){
     // Add the message to the chatroom's chatlog
     chatroom->addMessage(msg);
 
-    QTextCursor cursor = ui->messageDisplay->textCursor();
-    cursor.movePosition(QTextCursor::End);
+    if(chatroom == currentChatroom){
+        QTextCursor cursor = ui->messageDisplay->textCursor();
+        cursor.movePosition(QTextCursor::End);
 
-    QTextCharFormat userFormat;
-    userFormat.setForeground(Qt::yellow);
-    cursor.insertText(user + ": ", userFormat);
+        QTextCharFormat userFormat;
+        userFormat.setForeground(Qt::yellow);
+        cursor.insertText(user + ": ", userFormat);
 
-    QTextCharFormat messageFormat;
-    messageFormat.setForeground(Qt::white);
-    cursor.insertText(message + "\n", messageFormat);
+        QTextCharFormat messageFormat;
+        messageFormat.setForeground(Qt::white);
+        cursor.insertText(message + "\n", messageFormat);
 
-    ui->messageDisplay->setTextCursor(cursor);
-    ui->messageDisplay->ensureCursorVisible();
+        ui->messageDisplay->setTextCursor(cursor);
+        ui->messageDisplay->ensureCursorVisible();
+    } else{
+        // turn contact red
+        notificationReceived(user);
+    }
+
 }
 
 /* REGISTER, LOGIN, LOGOUT METHODS */
@@ -411,7 +418,8 @@ void MainWindow::buildContactList(){
         layout->addWidget(button);
 
         // connect to insert name into receiver field when clicked
-        QObject::connect(button, &QPushButton::clicked, this, [this, name = contactsList[i].name]() {
+        QObject::connect(button, &QPushButton::clicked, this, [this, button, name = contactsList[i].name]() {
+            button->setStyleSheet("");
             insertReceiver(name);
         });
     }
@@ -476,11 +484,25 @@ void MainWindow::insertReceiver(QString name){
 
     Chatroom* chatroom = findChatroom(name.toStdString());
     if(chatroom){
+        currentChatroom = chatroom;
         switchToChatroom(name.toStdString());
     } else {
         createChatroom(name.toStdString());
     }
 
+}
+void MainWindow::notificationReceived(QString user)
+{
+    QWidget* scrollAreaWidget = ui->scrollArea->widget();
+    if (!scrollAreaWidget) return;
+
+    QList<QPushButton*> buttons = scrollAreaWidget->findChildren<QPushButton*>();
+
+    for (QPushButton* button : buttons) {
+        if (button->text() == user) {
+            button->setStyleSheet("background-color: red;");
+        }
+    }
 }
 
 /* CHATROOM METHODS */
