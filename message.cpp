@@ -10,6 +10,11 @@ Message::Message(const User &from, const string &msgContent)
     content = msgContent;
 }
 
+Message::Message(const std::string &user, const std::string &text)
+    : username(user) {
+    content = text;
+}
+
 const User& Message::getSender() const {
     return sender;
 }

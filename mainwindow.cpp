@@ -154,6 +154,28 @@ void MainWindow::onSendButtonClicked() {
 }
 void MainWindow::displayReceivedMessage(QString user, QString message){
     qDebug() << "signal hit";
+    qDebug() << user;
+
+    auto it = std::find_if(chatrooms.begin(), chatrooms.end(),
+                           [&user](const Chatroom& chatroom) {
+                               return chatroom.getName() == user.toStdString();
+                           });
+
+    Chatroom* chatroom = nullptr;
+
+    if (it != chatrooms.end()) {
+        chatroom = &(*it);
+    } else {
+        Chatroom newChatroom(user.toStdString(), currentUser->getUsername(), user.toStdString());
+        chatrooms.push_back(newChatroom);
+        chatroom = &chatrooms.back();
+    }
+
+    User tempUser(user.toStdString());
+    Message msg(tempUser, message.toStdString());
+
+    // Add the message to the chatroom's chatlog
+    chatroom->addMessage(msg);
 
     QTextCursor cursor = ui->messageDisplay->textCursor();
     cursor.movePosition(QTextCursor::End);
@@ -223,6 +245,8 @@ void MainWindow::logout() {
             delete item;
         }
     }
+
+    chatrooms.clear();
 
     ui->stackedWidget->setCurrentIndex(0);
 }
