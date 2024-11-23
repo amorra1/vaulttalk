@@ -24,6 +24,11 @@ namespace encryption {
     // Decrypt the encrypted value using the private key (returns original message as string)
     std::string RSA_Decrypt(mpz_class inputValue, RSA_keys keys);
 
+    // AES Encryption function
+    // parameters: char * message, char * expandedKey, char * encryptedMessage (basically storage for the encrypted message)
+    //Required conversion of message type as detailed in message.cpp
+    void AESEncrypt(unsigned char * message, unsigned char * expandedKey, unsigned char * encryptedMessage);
+
 } // end namespace encryption
 
 #endif // ENCRYPTION_H

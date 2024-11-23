@@ -19,6 +19,8 @@ public:
     string getEncryptedContent(const User &user) const;
     string getDecryptedContent(const mpz_class &encryptedMessage, User &user) const;
 
+    string getAESEncryptedContent(const User &user);
+
     void displayMessage() const;
 };
 
