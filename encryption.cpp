@@ -220,18 +220,18 @@ std::string encryption::RSA_Decrypt(mpz_class inputValue, RSA_keys keys) {
 
 
 
-/* Serves as the initial round during encryption
- * AddRoundKey is simply an XOR of a 128-bit block with the 128-bit key.
- */
+// Serves as the initial round during encryption
+// AddRoundKey is simply an XOR of a 128-bit block with the 128-bit key.
+
 void AddRoundKey(unsigned char * state, unsigned char * roundKey) {
 	for (int i = 0; i < 16; i++) {
 		state[i] ^= roundKey[i];
 	}
 }
 
-/* Perform substitution to each of the 16 bytes
- * Uses S-box as lookup table 
- */
+// Perform substitution to each of the 16 bytes
+// Uses S-box as lookup table 
+
 void SubBytes(unsigned char * state) {
 	for (int i = 0; i < 16; i++) {
 		state[i] = s[state[i]];
@@ -299,9 +299,9 @@ void ShiftRows(unsigned char * state) {
 }
 
 
-/* Each round operates on 128 bits at a time
- * The number of rounds is defined in AESEncrypt()
- */
+// Each round operates on 128 bits at a time
+// The number of rounds is defined in AESEncrypt()
+
 void Round(unsigned char * state, unsigned char * key) {
 	SubBytes(state);
 	ShiftRows(state);

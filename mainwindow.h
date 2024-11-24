@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <QLineEdit>
+#include "chatroom.h"
 #include "networking.h"
 #include "user.h"
 #include "message.h"
@@ -39,6 +40,11 @@ private slots:
     void addContact();
     void checkContact(QLineEdit *contactUsernameInput);
     void insertReceiver(QString name);
+    void addContactToList(QString name);
+    void switchToChatroom(const std::string& chatroomName);
+    void createChatroom(const std::string& name);
+    Chatroom* findChatroom(const std::string& name);
+    void notificationReceived(QString user);
 
 private:
     Ui::MainWindow *ui;

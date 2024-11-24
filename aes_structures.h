@@ -192,8 +192,8 @@ unsigned char mul14[256] =
 	0xd7,0xd9,0xcb,0xc5,0xef,0xe1,0xf3,0xfd,0xa7,0xa9,0xbb,0xb5,0x9f,0x91,0x83,0x8d
 };
 
-// Auxiliary function for KeyExpansion
-void KeyExpansionCore(unsigned char * in, unsigned char i) {
+// Helper function for KeyExpansion
+void KeyExpansionHelper(unsigned char * in, unsigned char i) {
 	// Rotate left by one byte: shift left 
 	unsigned char t = in[0];
 	in[0] = in[1];
@@ -211,11 +211,11 @@ void KeyExpansionCore(unsigned char * in, unsigned char i) {
 	in[0] ^= rcon[i];
 }
 
-/* The main KeyExpansion function
- * Generates additional keys using the original key
- * Total of 11 128-bit keys generated, including the original
- * Keys are stored one after the other in expandedKeys
- */
+ // The main KeyExpansion function
+ //Generates additional keys using the original key
+ //Total of 11 128-bit keys generated, including the original
+ // Keys are stored one after the other in expandedKeys
+ 
 void KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]) {
 	// The first 128 bits are the original key
 	for (int i = 0; i < 16; i++) {
@@ -227,17 +227,17 @@ void KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]) {
 	unsigned char tmpCore[4]; // Temp storage for core
 
 	while (bytesGenerated < 176) {
-		/* Read 4 bytes for the core
-		* They are the previously generated 4 bytes
-		* Initially, these will be the final 4 bytes of the original key
-		*/
+		// Read 4 bytes for the core
+		// They are the previously generated 4 bytes
+		// Initially, these will be the final 4 bytes of the original key
+		
 		for (int i = 0; i < 4; i++) {
 			tmpCore[i] = expandedKeys[i + bytesGenerated - 4];
 		}
 
 		// Perform the core once for each 16 byte key
 		if (bytesGenerated % 16 == 0) {
-			KeyExpansionCore(tmpCore, rconIteration++);
+			KeyExpansionHelper(tmpCore, rconIteration++);
 		}
 
 		for (unsigned char a = 0; a < 4; a++) {

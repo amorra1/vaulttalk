@@ -15,6 +15,7 @@ class User {
 
 public:
     User(); // Default constructor
+    User(std::string username);
     User(std::string username, std::string hashedPassword);
     User(std::string username, std::string hashedPassword, std::string method, std::string duration);
     User(std::string username, std::string hashedPassword, RSA_keys keys);
@@ -36,7 +37,7 @@ public:
     std::string getRegenDuration() const;
     RSA_keys getKeys() const;
     QList<Contact> getContactsList(const QString& username);
-    void addContact(const QString& username, const QString& contactName);
+    bool addContact(const QString& username, const QString& contactName);
 
     void setUsername(std::string name);
     void setPassword(std::string password);

@@ -26,7 +26,7 @@ namespace encryption {
 
     // AES Encryption function
     // parameters: char * message, char * expandedKey, char * encryptedMessage (basically storage for the encrypted message)
-    //Required conversion of message type as detailed in message.cpp
+    //Requires conversion of message type as detailed in message.cpp
     void AESEncrypt(unsigned char * message, unsigned char * expandedKey, unsigned char * encryptedMessage);
 
 } // end namespace encryption
