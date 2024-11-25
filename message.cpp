@@ -1,4 +1,5 @@
 #include "message.h"
+#include "aes_structures.h"
 #include <iostream>
 #include <cstring> 
 #include <vector>
@@ -39,7 +40,7 @@ string Message::getEncryptedContent(const User &user) const {
         encryptedString = encrypted.get_str(10);
     }
     else if (method == "AES") {
-        //AES Logic here
+        //AES encryption Logic here
         std::vector<unsigned char> messageBuffer(this->content.begin(), this->content.end());
         messageBuffer.push_back('\0'); // Null-terminate for safety
 
@@ -84,7 +85,7 @@ string Message::getEncryptedContent(const User &user) const {
 
         // Encrypt the message in 16-byte blocks
         for (int i = 0; i < paddedMessageLen; i += 16) {
-            AESEncrypt(paddedMessage + i, expandedKey, encryptedMessage + i);
+            encryption::AESEncrypt(paddedMessage + i, expandedKey, encryptedMessage + i);
         }
 
         // Convert the encrypted message to a string
@@ -111,8 +112,56 @@ string Message::getDecryptedContent(const User &user) const {
         decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
     }
     else if (method == "AES"){
-        // AES encryption call here
-    }
+
+        // Convert mpz_class (encrypted content) to binary (unsigned char*)
+        std::vector<unsigned char> encryptedBuffer(this->content.size());
+        mpz_class encryptedContent(this->content);
+        size_t count;
+
+        mpz_export(encryptedBuffer.data(), &count, 1, 1, 0, 0, encryptedContent.get_mpz_t());
+        encryptedBuffer.resize(count); // Resize to actual exported size
+
+        // Prepare for decryption
+        size_t paddedMessageLen = encryptedBuffer.size();
+        std::vector<unsigned char> decryptedBuffer(paddedMessageLen, 0);
+
+        // Open the key file and read it into a string
+        string str;
+        ifstream infile("keyfile", ios::in | ios::binary);
+        if (infile.is_open()) {
+            getline(infile, str);
+            infile.close();
+        } else {
+            cout << "Unable to open keyfile" << endl;
+            return 1;
+        }
+
+        // Convert the string to a 16-byte array
+        istringstream hex_chars_stream(str);
+        unsigned char key[16];
+        int i = 0;
+        unsigned int c;
+        while (hex_chars_stream >> hex >> c) {
+            key[i] = c;
+            i++;
+        }
+
+        // Expand the 16-byte key to a 176-byte key
+        unsigned char expandedKey[176];
+        KeyExpansion(key, expandedKey);
+
+        // Decrypt the message in 16-byte blocks
+        for (int i = 0; i < paddedMessageLen; i += 16) {
+            AESDecrypt(encryptedBuffer.data() + i, expandedKey, decryptedMessage + i);
+        }
+
+        // Calculate the length of the decrypted message
+        int decryptedLen = paddedMessageLen;
+        removePadding(decryptedMessage, decryptedLen);
+
+        // Convert decrypted binary back to string
+        decryptedMessage.assign(reinterpret_cast<char*>(decryptedBuffer.data()), decryptedLen);
+        }
 
     return decryptedMessage;
 }

@@ -29,6 +29,9 @@ namespace encryption {
     //Requires conversion of message type as detailed in message.cpp
     void AESEncrypt(unsigned char * message, unsigned char * expandedKey, unsigned char * encryptedMessage);
 
+    // AES Decryption function
+    void AESDecrypt(unsigned char * encryptedMessage, unsigned char * expandedKey, unsigned char * decryptedMessage);
+
 } // end namespace encryption
 
 #endif // ENCRYPTION_H

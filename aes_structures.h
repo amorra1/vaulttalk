@@ -248,4 +248,12 @@ void KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]) {
 	}
 }
 
+//This function removes null bytes from message byte array
+void removePadding(unsigned char * message, int &length) {
+    while (length > 0 && message[length - 1] == 0x00) {
+        --length;
+    }
+    message[length] = '\0';
+}
+
 #endif /* STRUCTURES_H */
