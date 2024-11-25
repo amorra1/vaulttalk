@@ -96,25 +96,31 @@ RSA_keys encryption::GenerateKeys() {
     primes[0] = GeneratePrime(1024);
     primes[1] = GeneratePrime(1024);
 
+    // Calculating modulus n by multiplying the two generated primes
     mpz_class modulus = primes[0] * primes[1];
-    mpz_class phi = (primes[1] - 1) * (primes[0] - 1);
-    mpz_class e = 65537;
+
+    // Calculating Euler totient function (phi), required for RSA key generation
+    mpz_class phi = (primes[1] - 1) * (primes[0] - 1); // phi = (p-1) * (q-1) where p and q are the generated primes
+    mpz_class e = 65537; // public exponent e is chosen as 65537, a Fermat prime with many efficient properties
     mpz_class d;
 
     // Verify if e is coprime to phi. If not generate new e.
     // std::cout << "Checking if default e is valid..." << std::endl;
 
+    // Check if e is coprime with phi; if not regenerate e to ensure validity
     if (!CheckCoPrime(e, phi)) {
         // std::cout << "e is not valid. Regenerating to new coprime value..." << std::endl;
 
         while (true) {
-            // GeneratePrime accepts the lower range as an arguement. In this case it is e.
+            // GeneratePrime accepts the lower range as an argument. In this case it is e.
 
             mpz_class newPrime;
 
             mpz_nextprime(newPrime.get_mpz_t(), e.get_mpz_t());
-
+            // Verify if new prime is coprime with phi
             if (CheckCoPrime(newPrime, phi)) {
+                // Update e with valid coprime value and exit the loop
+                
                 // std::cout << "New e is: " << newPrime << std::endl;
 
                 e = newPrime;
