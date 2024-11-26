@@ -67,6 +67,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->regenDurationDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->saveChanges, &QPushButton::clicked, this, &MainWindow::saveChanges);
     connect(ui->addContact, &QPushButton::clicked, this, &MainWindow::addContact);
+    connect(ui->toolButton, &QPushButton::clicked, this, &MainWindow::friendRequest);
 }
 
 MainWindow::~MainWindow()
@@ -236,6 +237,7 @@ void MainWindow::logout() {
     ui->messageDisplay->clear();
     ui->receiverInput->clear();
     ui->settingsDisplay->clear();
+    ui->messageInput->clear();
 
     //clear contacts widget
     QWidget *container = ui->scrollArea->widget();
@@ -417,7 +419,7 @@ void MainWindow::buildContactList(){
 
         // connect to insert name into receiver field when clicked
         QObject::connect(button, &QPushButton::clicked, this, [this, button, name = contactsList[i].name]() {
-            button->setStyleSheet("");
+            clearNotificationBadge(button);
             insertReceiver(name);
         });
     }
@@ -489,18 +491,52 @@ void MainWindow::insertReceiver(QString name){
     }
 
 }
-void MainWindow::notificationReceived(QString user)
-{
-    QWidget* scrollAreaWidget = ui->scrollArea->widget();
+void MainWindow::notificationReceived(QString user) {
+    QWidget *scrollAreaWidget = ui->scrollArea->widget();
     if (!scrollAreaWidget) return;
 
-    QList<QPushButton*> buttons = scrollAreaWidget->findChildren<QPushButton*>();
+    QList<QPushButton *> buttons = scrollAreaWidget->findChildren<QPushButton *>();
+    bool userFound = false;
 
-    for (QPushButton* button : buttons) {
+    if (buttons.isEmpty()) {
+        addNotificationBadge(ui->toolButton, 1);
+        return;
+    }
+
+    for (QPushButton *button : buttons) {
         if (button->text() == user) {
-            button->setStyleSheet("background-color: red;");
+            addNotificationBadge(button, 1);
+            userFound = true;
+            break;
         }
     }
+
+    if (!userFound) {
+        addNotificationBadge(ui->toolButton, 1);
+    }
+}
+void MainWindow::addNotificationBadge(QWidget *widget, int notificationCount) {
+    QLabel *badgeLabel = new QLabel(widget);
+    badgeLabel->setText(QString::number(notificationCount));
+    badgeLabel->setStyleSheet("background-color: red; color: white; "
+                              "border-radius: 8px; font-weight: bold; "
+                              "padding: 1px; min-width: 16px; text-align: center;");
+    badgeLabel->setAlignment(Qt::AlignCenter);
+
+    QRect widgetRect = widget->rect();
+    int badgeSize = 16;
+    badgeLabel->setGeometry(widgetRect.width() - badgeSize, 2, badgeSize, badgeSize);
+    badgeLabel->show();
+}
+
+void MainWindow::clearNotificationBadge(QWidget *widget) {
+    QList<QLabel *> labels = widget->findChildren<QLabel *>();
+    for (QLabel *label : labels) {
+        label->deleteLater();
+    }
+}
+void MainWindow::friendRequest(){
+    qDebug() << "request";
 }
 
 /* CHATROOM METHODS */
