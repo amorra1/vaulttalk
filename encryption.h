@@ -30,8 +30,14 @@ namespace encryption {
     void AESEncrypt(unsigned char * message, unsigned char * expandedKey, unsigned char * encryptedMessage);
 
     // AES Decryption function
-    void AESDecrypt(unsigned char * encryptedMessage, unsigned char * expandedKey, unsigned char * decryptedMessage);
+    void AESDecrypt(unsigned char* encryptedMessage, unsigned char* expandedKey, unsigned char* decryptedMessage);
 
+    // This function removes null bytes from message byte array
+    // It is used in the AES decryption function
+    void removePadding(unsigned char * message, int &length);
+
+    //Expands the AES key
+    void KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]);
 } // end namespace encryption
 
 #endif // ENCRYPTION_H

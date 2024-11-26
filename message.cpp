@@ -1,8 +1,8 @@
 #include "message.h"
-#include "aes_structures.h"
 #include <iostream>
 #include <cstring> 
 #include <vector>
+#include <fstream>
 
 using namespace std;
 
@@ -44,8 +44,10 @@ string Message::getEncryptedContent(const User &user) const {
         messageBuffer.push_back('\0'); // Null-terminate for safety
 
         unsigned char* message = messageBuffer.data();
-        int originalLen = strlen((const char*)message);
-        int paddedMessageLen = (originalLen % 16 == 0) ? originalLen : (originalLen / 16 + 1) * 16;
+        // int originalLen = strlen((const char*)message);
+        int originalLen = messageBuffer.size() - 1; // Size minus null-terminator
+        // int paddedMessageLen = (originalLen % 16 == 0) ? originalLen : (originalLen / 16 + 1) * 16;
+        size_t paddedMessageLen = (originalLen % 16 == 0) ? originalLen : (originalLen / 16 + 1) * 16;
 
         // Create padded and encrypted message buffers
         unsigned char* paddedMessage = new unsigned char[paddedMessageLen];
@@ -80,7 +82,7 @@ string Message::getEncryptedContent(const User &user) const {
 
         // Expand the 16-byte key to a 176-byte key
         unsigned char expandedKey[176];
-        KeyExpansion(AES_key, expandedKey);
+        encryption::KeyExpansion(AES_key, expandedKey);
 
         // Encrypt the message in 16-byte blocks
         for (int i = 0; i < paddedMessageLen; i += 16) {
@@ -132,7 +134,7 @@ string Message::getDecryptedContent(const User &user) const {
             infile.close();
         } else {
             cout << "Unable to open keyfile" << endl;
-            return 1;
+            return "";
         }
 
         // Convert the string to a 16-byte array
@@ -151,12 +153,12 @@ string Message::getDecryptedContent(const User &user) const {
 
         // Decrypt the message in 16-byte blocks
         for (int i = 0; i < paddedMessageLen; i += 16) {
-            AESDecrypt(encryptedBuffer.data() + i, expandedKey, decryptedMessage + i);
+            encryption::AESDecrypt(encryptedBuffer.data() + i, expandedKey, decryptedMessage + i);
         }
 
         // Calculate the length of the decrypted message
         int decryptedLen = paddedMessageLen;
-        removePadding(decryptedMessage, decryptedLen);
+        encryption::removePadding(decryptedMessage, decryptedLen);
 
         // Convert decrypted binary back to string
         decryptedMessage.assign(reinterpret_cast<char*>(decryptedBuffer.data()), decryptedLen);

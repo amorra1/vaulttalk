@@ -4,7 +4,6 @@
 #include <math.h>
 #include <chrono>
 #include <sstream>
-#include "aes_structures.h"
 #include "encryption.h"
 
 using namespace encryption;
