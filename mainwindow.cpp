@@ -79,6 +79,7 @@ MainWindow::~MainWindow()
 
 /* NAVIGATION METHODS */
 void MainWindow::goToMain() {
+    buildSettingsDisplay();
     ui->stackedWidget->setCurrentIndex(1);
 }
 void MainWindow::goToSettings() {
@@ -206,10 +207,8 @@ void MainWindow::login() {
     QString password = ui->passwordInput->text();
 
     delete currentUser;
-    //create user object and login, creating new keys every login right now as key storage on server is difficult
-    RSA_keys keys = encryption::GenerateKeys();
 
-    currentUser = new User(username.toStdString(), password.toStdString(), keys);
+    currentUser = new User(username.toStdString(), password.toStdString());
     currentUser->loginUser(*currentUser, [this](bool success) {
         if (success) {
             qDebug() << "Callback: Login was successful!";
@@ -217,13 +216,13 @@ void MainWindow::login() {
             // update network user
             network = new networking(*currentUser);
             connect(network, &networking::messageReceived, this, &MainWindow::displayReceivedMessage);
+
+            ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
+            buildSettingsDisplay();
+            buildSettingsPage();
+            buildContactList();
         }
     });
-
-    ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
-    buildSettingsDisplay();
-    buildSettingsPage();
-    buildContactList();
 }
 void MainWindow::logout() {
     //clear register fields
@@ -294,6 +293,7 @@ void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->clear();
 
     QString encryptionMethod = QString::fromStdString(currentUser->getEncryptionMethod());
+    qDebug() << "settings display" + currentUser->getEncryptionMethod();
     QString regenDuration = QString::fromStdString(currentUser->getRegenDuration());
 
     RSA_keys publicKeyPair = currentUser->getKeys();
@@ -385,6 +385,7 @@ void MainWindow::saveChanges() {
     connect(reply, &QNetworkReply::finished, [this, reply]() {
         if (reply->error() == QNetworkReply::NoError) {
             QMessageBox::information(this, "Success", "User settings updated successfully.");
+            qDebug() << "settings saved" + ui->methodDropdown->currentText().toStdString();
             currentUser->setUsername(ui->settingsUsernameBox->text().toStdString());
             currentUser->setPassword(currentUser->hashPassword(ui->settingsPasswordBox->text().toStdString()));
             currentUser->setEncryptionMethod(ui->methodDropdown->currentText().toStdString());
@@ -397,7 +398,6 @@ void MainWindow::saveChanges() {
         reply->deleteLater();
     });
 
-    buildSettingsDisplay();
 }
 
 /* CONTACT METHODS */
