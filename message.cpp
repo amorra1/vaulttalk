@@ -61,7 +61,7 @@ string Message::getEncryptedContent(const User &user) const {
         string str;
         ifstream infile("./aes_keyfile", ios::in | ios::binary);
         if (!infile) {
-            cerr << "Error: Unable to open aes_keyfile. Ensure the file exists in the working directory." << endl;
+            qDebug() << "Error: Unable to open aes_keyfile. Ensure the file exists in the working directory.";
             delete[] paddedMessage;
             delete[] encryptedMessage;
             return encryptedString; // Return unencrypted content
@@ -79,7 +79,7 @@ string Message::getEncryptedContent(const User &user) const {
         int i = 0;
         while (hex_chars_stream >> hex >> c) {
             if (i >= 16) {
-                cerr << "Error: Key file contains more than 16 bytes. Ensure the key is valid." << endl;
+                qDebug() << "Error: Key file contains more than 16 bytes. Ensure the key is valid.";
                 delete[] paddedMessage;
                 delete[] encryptedMessage;
                 return encryptedString;
@@ -89,7 +89,7 @@ string Message::getEncryptedContent(const User &user) const {
         }
 
         if (i < 16) {
-            cerr << "Error: Key file contains fewer than 16 bytes. Ensure the key is valid." << endl;
+            qDebug() << "Error: Key file contains fewer than 16 bytes. Ensure the key is valid.";
             delete[] paddedMessage;
             delete[] encryptedMessage;
             return encryptedString;
@@ -127,7 +127,7 @@ string Message::getDecryptedContent(const User &user) const {
         string str;
         ifstream infile("./aes_keyfile", ios::in | ios::binary);
         if (!infile) {
-            cerr << "Error: Unable to open aes_keyfile. Ensure the file exists in the working directory." << endl;
+            qDebug() << "Error: Unable to open aes_keyfile. Ensure the file exists in the working directory.";
             return decryptedMessage;
         }
 
@@ -135,7 +135,7 @@ string Message::getDecryptedContent(const User &user) const {
         infile.close();
 
         // Debugging: Print the content of the key file
-        cout << "Key file content: " << str << endl;
+        // cout << "Key file content: " << str << endl;
 
         unsigned char AES_key[16];
         istringstream hex_chars_stream(str);
@@ -143,7 +143,7 @@ string Message::getDecryptedContent(const User &user) const {
         int i = 0;
         while (hex_chars_stream >> hex >> c) {
             if (i >= 16) {
-                cerr << "Error: Key file contains more than 16 bytes. Ensure the key is valid." << endl;
+                qDebug() << "Error: Key file contains more than 16 bytes. Ensure the key is valid.";
                 return decryptedMessage;
             }
             AES_key[i] = c;
@@ -151,7 +151,7 @@ string Message::getDecryptedContent(const User &user) const {
         }
 
         if (i < 16) {
-            cerr << "Error: Key file contains fewer than 16 bytes. Ensure the key is valid." << endl;
+            qDebug() << "Error: Key file contains fewer than 16 bytes. Ensure the key is valid.";
             return decryptedMessage;
         }
 
