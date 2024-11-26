@@ -35,11 +35,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     //home page
     ui->messageInput->setPlaceholderText("Type message here...");
-    ui->senderInput->setPlaceholderText("Sender");
     ui->receiverInput->setPlaceholderText("Receiver");
     ui->messageDisplay->setReadOnly(true);
-
-    ui->settingsDisplay->addItem("Enryption Method: ");
 
     //register page
     ui->signUpUsernameInput->setPlaceholderText("Username");
@@ -408,6 +405,7 @@ void MainWindow::buildContactList(){
 
     if (!layout) {
         layout = new QVBoxLayout(container);
+        layout->setAlignment(Qt::AlignTop);
         container->setLayout(layout);
     }
 
