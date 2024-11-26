@@ -431,7 +431,7 @@ void KeyExpansionHelper(unsigned char * in, unsigned char i) {
  // Total of 11 128-bit keys generated, including the original
  // Keys are stored one after the other in expandedKeys
  
-void KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]) {
+void encryption::KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]) {
 	// The first 128 bits are the original key
 	for (int i = 0; i < 16; i++) {
 		expandedKeys[i] = inputKey[i];
@@ -464,7 +464,7 @@ void KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]) {
 }
 
 // This function removes null bytes from message byte array
-void removePadding(unsigned char * message, int &length) {
+void encryption::removePadding(unsigned char * message, int &length) {
     while (length > 0 && message[length - 1] == 0x00) {
         --length;
     }
@@ -666,7 +666,7 @@ void FinalRound(unsigned char * state, unsigned char * key) {
 	AddRoundKey(state, key);
 }
 
-void AESEncrypt(unsigned char * message, unsigned char * expandedKey, unsigned char * encryptedMessage) {
+void encryption::AESEncrypt(unsigned char * message, unsigned char * expandedKey, unsigned char * encryptedMessage) {
 	unsigned char state[16]; // Stores the first 16 bytes of original message
 
 	for (int i = 0; i < 16; i++) {
@@ -692,7 +692,7 @@ void AESEncrypt(unsigned char * message, unsigned char * expandedKey, unsigned c
 // The AES decryption function
 // Organizes all the decryption steps into one function
  
-void AESDecrypt(unsigned char * encryptedMessage, unsigned char * expandedKey, unsigned char * decryptedMessage) {
+void encryption::AESDecrypt(unsigned char * encryptedMessage, unsigned char * expandedKey, unsigned char * decryptedMessage) {
 	unsigned char state[16]; // Stores the first 16 bytes of encrypted message
 
 	for (int i = 0; i < 16; i++) {

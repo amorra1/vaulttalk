@@ -1,8 +1,10 @@
 #include "message.h"
+#include "encryption.h"
 #include <iostream>
 #include <cstring> 
 #include <vector>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -149,16 +151,16 @@ string Message::getDecryptedContent(const User &user) const {
 
         // Expand the 16-byte key to a 176-byte key
         unsigned char expandedKey[176];
-        KeyExpansion(key, expandedKey);
+        encryption::KeyExpansion(key, expandedKey);
 
         // Decrypt the message in 16-byte blocks
-        for (int i = 0; i < paddedMessageLen; i += 16) {
-            encryption::AESDecrypt(encryptedBuffer.data() + i, expandedKey, decryptedMessage + i);
+        for (size_t i = 0; i < paddedMessageLen; i += 16) {
+            encryption::AESDecrypt(encryptedBuffer.data() + i, expandedKey,  reinterpret_cast<unsigned char*>(&decryptedMessage[0]) + i);
         }
 
         // Calculate the length of the decrypted message
         int decryptedLen = paddedMessageLen;
-        encryption::removePadding(decryptedMessage, decryptedLen);
+        encryption::removePadding(reinterpret_cast<unsigned char*>(&decryptedMessage[0]), decryptedLen);
 
         // Convert decrypted binary back to string
         decryptedMessage.assign(reinterpret_cast<char*>(decryptedBuffer.data()), decryptedLen);
