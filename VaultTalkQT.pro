@@ -40,3 +40,6 @@ INCLUDEPATH += $$PWD/gmp_compiled/inc
 DEPENDPATH += $$PWD/gmp_compiled/inc
 PRE_TARGETDEPS += $$PWD/gmp_compiled/lib/libgmpxx.a
 PRE_TARGETDEPS += $$PWD/gmp_compiled/lib/libgmp.a
+
+DISTFILES += \
+    aes_keyfile

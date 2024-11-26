@@ -24,7 +24,6 @@ public:
     string getEncryptedContent(const User &user) const;
     string getDecryptedContent(const User &user) const;
 
-
     void displayMessage() const;
 };
 
