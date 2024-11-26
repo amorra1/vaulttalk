@@ -6,6 +6,7 @@
 #include <QLineEdit>
 #include "chatroom.h"
 #include "networking.h"
+#include "qpushbutton.h"
 #include "user.h"
 #include "message.h"
 
@@ -45,6 +46,9 @@ private slots:
     void createChatroom(const std::string& name);
     Chatroom* findChatroom(const std::string& name);
     void notificationReceived(QString user);
+    void addNotificationBadge(QWidget *widget, int notificationCount);
+    void clearNotificationBadge(QWidget *widget);
+    void friendRequest();
 
 private:
     Ui::MainWindow *ui;

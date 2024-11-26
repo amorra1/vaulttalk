@@ -35,11 +35,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     //home page
     ui->messageInput->setPlaceholderText("Type message here...");
-    ui->senderInput->setPlaceholderText("Sender");
     ui->receiverInput->setPlaceholderText("Receiver");
     ui->messageDisplay->setReadOnly(true);
-
-    ui->settingsDisplay->addItem("Enryption Method: ");
 
     //register page
     ui->signUpUsernameInput->setPlaceholderText("Username");
@@ -70,6 +67,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->regenDurationDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->saveChanges, &QPushButton::clicked, this, &MainWindow::saveChanges);
     connect(ui->addContact, &QPushButton::clicked, this, &MainWindow::addContact);
+    connect(ui->toolButton, &QPushButton::clicked, this, &MainWindow::friendRequest);
 }
 
 MainWindow::~MainWindow()
@@ -79,6 +77,7 @@ MainWindow::~MainWindow()
 
 /* NAVIGATION METHODS */
 void MainWindow::goToMain() {
+    buildSettingsDisplay();
     ui->stackedWidget->setCurrentIndex(1);
 }
 void MainWindow::goToSettings() {
@@ -206,10 +205,8 @@ void MainWindow::login() {
     QString password = ui->passwordInput->text();
 
     delete currentUser;
-    //create user object and login, creating new keys every login right now as key storage on server is difficult
-    RSA_keys keys = encryption::GenerateKeys();
 
-    currentUser = new User(username.toStdString(), password.toStdString(), keys);
+    currentUser = new User(username.toStdString(), password.toStdString());
     currentUser->loginUser(*currentUser, [this](bool success) {
         if (success) {
             qDebug() << "Callback: Login was successful!";
@@ -217,13 +214,13 @@ void MainWindow::login() {
             // update network user
             network = new networking(*currentUser);
             connect(network, &networking::messageReceived, this, &MainWindow::displayReceivedMessage);
+
+            ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
+            buildSettingsDisplay();
+            buildSettingsPage();
+            buildContactList();
         }
     });
-
-    ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
-    buildSettingsDisplay();
-    buildSettingsPage();
-    buildContactList();
 }
 void MainWindow::logout() {
     //clear register fields
@@ -240,6 +237,7 @@ void MainWindow::logout() {
     ui->messageDisplay->clear();
     ui->receiverInput->clear();
     ui->settingsDisplay->clear();
+    ui->messageInput->clear();
 
     //clear contacts widget
     QWidget *container = ui->scrollArea->widget();
@@ -294,6 +292,7 @@ void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->clear();
 
     QString encryptionMethod = QString::fromStdString(currentUser->getEncryptionMethod());
+    qDebug() << "settings display" + currentUser->getEncryptionMethod();
     QString regenDuration = QString::fromStdString(currentUser->getRegenDuration());
 
     RSA_keys publicKeyPair = currentUser->getKeys();
@@ -385,6 +384,7 @@ void MainWindow::saveChanges() {
     connect(reply, &QNetworkReply::finished, [this, reply]() {
         if (reply->error() == QNetworkReply::NoError) {
             QMessageBox::information(this, "Success", "User settings updated successfully.");
+            qDebug() << "settings saved" + ui->methodDropdown->currentText().toStdString();
             currentUser->setUsername(ui->settingsUsernameBox->text().toStdString());
             currentUser->setPassword(currentUser->hashPassword(ui->settingsPasswordBox->text().toStdString()));
             currentUser->setEncryptionMethod(ui->methodDropdown->currentText().toStdString());
@@ -397,7 +397,6 @@ void MainWindow::saveChanges() {
         reply->deleteLater();
     });
 
-    buildSettingsDisplay();
 }
 
 /* CONTACT METHODS */
@@ -408,6 +407,7 @@ void MainWindow::buildContactList(){
 
     if (!layout) {
         layout = new QVBoxLayout(container);
+        layout->setAlignment(Qt::AlignTop);
         container->setLayout(layout);
     }
 
@@ -419,7 +419,7 @@ void MainWindow::buildContactList(){
 
         // connect to insert name into receiver field when clicked
         QObject::connect(button, &QPushButton::clicked, this, [this, button, name = contactsList[i].name]() {
-            button->setStyleSheet("");
+            clearNotificationBadge(button);
             insertReceiver(name);
         });
     }
@@ -491,18 +491,107 @@ void MainWindow::insertReceiver(QString name){
     }
 
 }
-void MainWindow::notificationReceived(QString user)
-{
-    QWidget* scrollAreaWidget = ui->scrollArea->widget();
+void MainWindow::notificationReceived(QString user) {
+    QWidget *scrollAreaWidget = ui->scrollArea->widget();
     if (!scrollAreaWidget) return;
 
-    QList<QPushButton*> buttons = scrollAreaWidget->findChildren<QPushButton*>();
+    QList<QPushButton *> buttons = scrollAreaWidget->findChildren<QPushButton *>();
+    bool userFound = false;
 
-    for (QPushButton* button : buttons) {
+    for (QPushButton *button : buttons) {
         if (button->text() == user) {
-            button->setStyleSheet("background-color: red;");
+            addNotificationBadge(button, 1);
+            userFound = true;
+            break;
         }
     }
+
+    if (!userFound) {
+        currentUser->addRequest(user);
+        addNotificationBadge(ui->toolButton, 1);
+    }
+}
+void MainWindow::addNotificationBadge(QWidget *widget, int notificationCount) {
+    QLabel *badgeLabel = new QLabel(widget);
+    badgeLabel->setText(QString::number(notificationCount));
+    badgeLabel->setStyleSheet("background-color: red; color: white; "
+                              "border-radius: 8px; font-weight: bold; "
+                              "padding: 1px; min-width: 16px; text-align: center;");
+    badgeLabel->setAlignment(Qt::AlignCenter);
+
+    QRect widgetRect = widget->rect();
+    int badgeSize = 16;
+    badgeLabel->setGeometry(widgetRect.width() - badgeSize, 2, badgeSize, badgeSize);
+    badgeLabel->show();
+}
+
+void MainWindow::clearNotificationBadge(QWidget *widget) {
+    QList<QLabel *> labels = widget->findChildren<QLabel *>();
+    for (QLabel *label : labels) {
+        label->deleteLater();
+    }
+}
+void MainWindow::friendRequest() {
+    QList<QString> requestList = currentUser->getRequests();
+    if (requestList.isEmpty()) {
+        QMessageBox::information(this, "Friend Requests", "No friend requests at the moment.");
+        return;
+    }
+
+    QDialog *dialog = new QDialog(this);
+    dialog->setWindowTitle("Friend Requests");
+    QVBoxLayout *layout = new QVBoxLayout(dialog);
+
+    QMap<QString, QHBoxLayout*> requestLayouts;
+
+    for (const auto& request : requestList) {
+        QHBoxLayout *requestLayout = new QHBoxLayout();
+
+        QLabel *nameLabel = new QLabel(request, dialog);
+        requestLayout->addWidget(nameLabel);
+
+        QPushButton *addButton = new QPushButton("Add Friend", dialog);
+        requestLayout->addWidget(addButton);
+
+        QPushButton *declineButton = new QPushButton("Decline", dialog);
+        requestLayout->addWidget(declineButton);
+
+        layout->addLayout(requestLayout);
+        requestLayouts[request] = requestLayout;
+
+        connect(addButton, &QPushButton::clicked, [this, dialog, &requestList, &requestLayouts, request, layout]() {
+            currentUser->addContact(QString::fromStdString(currentUser->getUsername()), request);
+            QMessageBox::information(dialog, "Friend Added", request + " has been added as a friend.");
+
+            requestList.removeOne(request);
+            delete requestLayouts[request];
+            requestLayouts.remove(request);
+            addContactToList(request);
+
+            if (requestList.isEmpty()) {
+                dialog->accept();
+            }
+        });
+
+        connect(declineButton, &QPushButton::clicked, [dialog, &requestList, &requestLayouts, request, layout]() {
+            QMessageBox::information(dialog, "Friend Declined", request + "'s request has been declined.");
+
+            requestList.removeOne(request);
+            delete requestLayouts[request];
+            requestLayouts.remove(request);
+
+            if (requestList.isEmpty()) {
+                dialog->accept();
+            }
+        });
+
+        currentUser->removeRequest(request);
+    }
+
+    clearNotificationBadge(ui->toolButton);
+
+    dialog->setLayout(layout);
+    dialog->exec();
 }
 
 /* CHATROOM METHODS */

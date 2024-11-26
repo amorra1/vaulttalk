@@ -31,7 +31,7 @@ User::User(string username) : username(username), hashedPassword(""), encryption
 
 // Constructor with username and password, default encryptionMethod and regenDuration
 User::User(string username, string password)
-    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never") {}
+    : username(username), hashedPassword(hashPassword(password)) {}
 
 // Constructor with username, password, encryption method, and regeneration duration
 User::User(string username, string password, string method, string duration)
@@ -88,6 +88,23 @@ void User::setPrivateKey(const mpz_class& n, const mpz_class& d) {
 
 RSA_keys User::getKeys() const {
     return this->RSAKeys;
+}
+
+void User::addRequest(QString user) {
+    if (!requests.contains(user)) {
+        this->requests.append(user);
+        qDebug() << "added user: " + user;
+    }
+}
+
+void User::removeRequest(QString user) {
+    if (requests.contains(user)) {
+        requests.removeAll(user);
+    }
+}
+
+QList<QString> User::getRequests() const {
+    return requests;
 }
 
 // Temporary hash function for password (replace with a secure hash later)
@@ -153,8 +170,8 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
     QJsonObject json;
-    json.insert("username", QString::fromStdString(user.username));
-    json.insert("password", QString::fromStdString(user.hashedPassword));
+    json.insert("username", QString::fromStdString(user.getUsername()));
+    json.insert("password", QString::fromStdString(user.getPassword()));
 
     QJsonDocument jsonDoc(json);
 
@@ -175,6 +192,7 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
                 successCheck = true;
 
                 if (jsonObject.contains("encryptionMethod")) {
+                    qDebug() << jsonObject["encryptionMethod"].toString().toStdString();
                     user.setEncryptionMethod(jsonObject["encryptionMethod"].toString().toStdString());
                 }
                 if (jsonObject.contains("regenDuration")) {
@@ -183,13 +201,17 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
 
                 if (jsonObject.contains("publicKey")) {
                     QJsonObject publicKey = jsonObject["publicKey"].toObject();
-                    user.RSAKeys.publicKey[0] = mpz_class(publicKey["n"].toString().toStdString(), 16);
-                    user.RSAKeys.publicKey[1] = mpz_class(publicKey["e"].toString().toStdString(), 16);
+                    user.setPublicKey(
+                        mpz_class(publicKey["n"].toString().toStdString(), 16),
+                        mpz_class(publicKey["e"].toString().toStdString(), 16)
+                        );
                 }
                 if (jsonObject.contains("privateKey")) {
                     QJsonObject privateKey = jsonObject["privateKey"].toObject();
-                    user.RSAKeys.privateKey[0] = mpz_class(privateKey["n"].toString().toStdString(), 16);
-                    user.RSAKeys.privateKey[1] = mpz_class(privateKey["d"].toString().toStdString(), 16);
+                    user.setPrivateKey(
+                        mpz_class(privateKey["n"].toString().toStdString(), 16),
+                        mpz_class(privateKey["d"].toString().toStdString(), 16)
+                        );
                 }
             }
         } else {
