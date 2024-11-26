@@ -1,7 +1,7 @@
 #include "message.h"
 #include "encryption.h"
 #include <iostream>
-#include <cstring> 
+#include <cstring>
 #include <vector>
 #include <fstream>
 #include <sstream>
