@@ -45,6 +45,8 @@ public:
     void setRegenDuration(std::string duration);
     void setPublicKey(const mpz_class& n, const mpz_class& e);
     void setPrivateKey(const mpz_class& n, const mpz_class& d);;
+    void addRequest(QString user);
+    QList<QString> getRequests() const;
 
     static std::string hashPassword(const std::string &password);
 
@@ -52,12 +54,15 @@ public:
     static void registerUser(User user);
     void loginUser(User &user, std::function<void(bool)> callback);
 
+    QList<QString> requests;
+
 private:
     std::string username;
     std::string hashedPassword;
     std::string encryptionMethod;
     std::string regenDuration;
     RSA_keys RSAKeys;
+
 
 };
 

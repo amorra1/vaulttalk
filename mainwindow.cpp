@@ -498,11 +498,6 @@ void MainWindow::notificationReceived(QString user) {
     QList<QPushButton *> buttons = scrollAreaWidget->findChildren<QPushButton *>();
     bool userFound = false;
 
-    if (buttons.isEmpty()) {
-        addNotificationBadge(ui->toolButton, 1);
-        return;
-    }
-
     for (QPushButton *button : buttons) {
         if (button->text() == user) {
             addNotificationBadge(button, 1);
@@ -512,6 +507,7 @@ void MainWindow::notificationReceived(QString user) {
     }
 
     if (!userFound) {
+        currentUser->addRequest(user);
         addNotificationBadge(ui->toolButton, 1);
     }
 }
@@ -535,8 +531,65 @@ void MainWindow::clearNotificationBadge(QWidget *widget) {
         label->deleteLater();
     }
 }
-void MainWindow::friendRequest(){
-    qDebug() << "request";
+void MainWindow::friendRequest() {
+    QList<QString> requestList = currentUser->getRequests();
+    if (requestList.isEmpty()) {
+        QMessageBox::information(this, "Friend Requests", "No friend requests at the moment.");
+        return;
+    }
+
+    QDialog *dialog = new QDialog(this);
+    dialog->setWindowTitle("Friend Requests");
+    QVBoxLayout *layout = new QVBoxLayout(dialog);
+
+    QMap<QString, QHBoxLayout*> requestLayouts;
+
+    for (const auto& request : requestList) {
+        QHBoxLayout *requestLayout = new QHBoxLayout();
+
+        QLabel *nameLabel = new QLabel(request, dialog);
+        requestLayout->addWidget(nameLabel);
+
+        QPushButton *addButton = new QPushButton("Add Friend", dialog);
+        requestLayout->addWidget(addButton);
+
+        QPushButton *declineButton = new QPushButton("Decline", dialog);
+        requestLayout->addWidget(declineButton);
+
+        layout->addLayout(requestLayout);
+        requestLayouts[request] = requestLayout;
+
+        connect(addButton, &QPushButton::clicked, [this, dialog, &requestList, &requestLayouts, request, layout]() {
+            currentUser->addContact(QString::fromStdString(currentUser->getUsername()), request);
+            QMessageBox::information(dialog, "Friend Added", request + " has been added as a friend.");
+
+            requestList.removeOne(request);
+            delete requestLayouts[request];
+            requestLayouts.remove(request);
+            addContactToList(request);
+
+            if (requestList.isEmpty()) {
+                dialog->accept();
+            }
+        });
+
+        connect(declineButton, &QPushButton::clicked, [dialog, &requestList, &requestLayouts, request, layout]() {
+            QMessageBox::information(dialog, "Friend Declined", request + "'s request has been declined.");
+
+            requestList.removeOne(request);
+            delete requestLayouts[request];
+            requestLayouts.remove(request);
+
+            if (requestList.isEmpty()) {
+                dialog->accept();
+            }
+        });
+    }
+
+    clearNotificationBadge(ui->toolButton);
+
+    dialog->setLayout(layout);
+    dialog->exec();
 }
 
 /* CHATROOM METHODS */

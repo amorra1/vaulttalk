@@ -90,6 +90,17 @@ RSA_keys User::getKeys() const {
     return this->RSAKeys;
 }
 
+void User::addRequest(QString user) {
+    if (!requests.contains(user)) {
+        this->requests.append(user);
+        qDebug() << "added user: " + user;
+    }
+}
+
+QList<QString> User::getRequests() const {
+    return requests;
+}
+
 // Temporary hash function for password (replace with a secure hash later)
 string User::hashPassword(const string &password) {
     // Convert std::string to QString
