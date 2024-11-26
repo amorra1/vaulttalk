@@ -46,6 +46,7 @@ public:
     void setPublicKey(const mpz_class& n, const mpz_class& e);
     void setPrivateKey(const mpz_class& n, const mpz_class& d);;
     void addRequest(QString user);
+    void removeRequest(QString user);
     QList<QString> getRequests() const;
 
     static std::string hashPassword(const std::string &password);

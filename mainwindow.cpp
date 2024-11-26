@@ -584,6 +584,8 @@ void MainWindow::friendRequest() {
                 dialog->accept();
             }
         });
+
+        currentUser->removeRequest(request);
     }
 
     clearNotificationBadge(ui->toolButton);

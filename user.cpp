@@ -97,6 +97,12 @@ void User::addRequest(QString user) {
     }
 }
 
+void User::removeRequest(QString user) {
+    if (requests.contains(user)) {
+        requests.removeAll(user);
+    }
+}
+
 QList<QString> User::getRequests() const {
     return requests;
 }
