@@ -133,7 +133,19 @@ void MainWindow::onSendButtonClicked() {
         chatroom->addMessage(msg);
 
         QTextCursor cursor = ui->messageDisplay->textCursor();
-        cursor.movePosition(QTextCursor::End);
+        QTextBlockFormat blockFormat = cursor.blockFormat();
+
+        QList<QTextOption::Tab> tabPositions;
+        QTextOption::Tab rightTab;
+        rightTab.type = QTextOption::RightTab;
+        rightTab.position = ui->messageDisplay->width() - 10;
+        tabPositions.append(rightTab);
+
+        blockFormat.setTabPositions(tabPositions);
+        cursor.setBlockFormat(blockFormat);
+
+        time_t tempTimestamp = msg.getTimestamp();
+        QString timestamp = QString::fromStdString(std::string(std::ctime(&tempTimestamp))).trimmed();
 
         QTextCharFormat userFormat;
         userFormat.setForeground(Qt::green);
@@ -142,10 +154,16 @@ void MainWindow::onSendButtonClicked() {
 
         QTextCharFormat messageFormat;
         messageFormat.setForeground(Qt::white);
-        cursor.insertText(QString::fromStdString(content) + "\n", messageFormat);
+        cursor.insertText(QString::fromStdString(content), messageFormat);
+
+        cursor.insertText("\t");
+        QTextCharFormat timestampFormat;
+        timestampFormat.setForeground(Qt::gray);
+        cursor.insertText("[" + timestamp + "]", timestampFormat);
+
+        cursor.insertText("\n");
 
         ui->messageDisplay->setTextCursor(cursor);
-        ui->messageDisplay->ensureCursorVisible();
 
         ui->messageInput->clear();
     } else {
@@ -179,7 +197,19 @@ void MainWindow::displayReceivedMessage(QString user, QString message){
 
     if(chatroom == currentChatroom){
         QTextCursor cursor = ui->messageDisplay->textCursor();
-        cursor.movePosition(QTextCursor::End);
+        QTextBlockFormat blockFormat = cursor.blockFormat();
+
+        QList<QTextOption::Tab> tabPositions;
+        QTextOption::Tab rightTab;
+        rightTab.type = QTextOption::RightTab;
+        rightTab.position = ui->messageDisplay->width() - 10;
+        tabPositions.append(rightTab);
+
+        blockFormat.setTabPositions(tabPositions);
+        cursor.setBlockFormat(blockFormat);
+
+        time_t tempTimestamp = msg.getTimestamp();
+        QString timestamp = QString::fromStdString(std::string(std::ctime(&tempTimestamp))).trimmed();
 
         QTextCharFormat userFormat;
         userFormat.setForeground(Qt::yellow);
@@ -187,10 +217,16 @@ void MainWindow::displayReceivedMessage(QString user, QString message){
 
         QTextCharFormat messageFormat;
         messageFormat.setForeground(Qt::white);
-        cursor.insertText(message + "\n", messageFormat);
+        cursor.insertText(message, messageFormat);
+
+        cursor.insertText("\t");
+        QTextCharFormat timestampFormat;
+        timestampFormat.setForeground(Qt::gray);
+        cursor.insertText("[" + timestamp + "]", timestampFormat);
+
+        cursor.insertText("\n");
 
         ui->messageDisplay->setTextCursor(cursor);
-        ui->messageDisplay->ensureCursorVisible();
     } else{
         // turn contact red
         notificationReceived(user);
@@ -617,12 +653,25 @@ void MainWindow::switchToChatroom(const std::string& chatroomName) {
 
     ui->messageDisplay->clear();
     const auto& messages = chatroom->getChatLog();
+
+    QTextCursor cursor = ui->messageDisplay->textCursor();
+    QTextBlockFormat blockFormat = cursor.blockFormat();
+
+    QList<QTextOption::Tab> tabPositions;
+    QTextOption::Tab rightTab;
+    rightTab.type = QTextOption::RightTab;
+    rightTab.position = ui->messageDisplay->width() - 10;
+    tabPositions.append(rightTab);
+
+    blockFormat.setTabPositions(tabPositions);
+    cursor.setBlockFormat(blockFormat);
+
     for (const auto& msg : messages) {
         QString user = QString::fromStdString(msg.getSender().getUsername());
         QString content = QString::fromStdString(msg.getContent());
 
-        QTextCursor cursor = ui->messageDisplay->textCursor();
-        cursor.movePosition(QTextCursor::End);
+        time_t tempTimestamp = msg.getTimestamp();
+        QString timestamp = QString::fromStdString(std::string(std::ctime(&tempTimestamp))).trimmed();
 
         QTextCharFormat userFormat;
         userFormat.setForeground(Qt::yellow);
@@ -630,8 +679,17 @@ void MainWindow::switchToChatroom(const std::string& chatroomName) {
 
         QTextCharFormat messageFormat;
         messageFormat.setForeground(Qt::white);
-        cursor.insertText(content + "\n", messageFormat);
+        cursor.insertText(content, messageFormat);
+
+        cursor.insertText("\t");
+        QTextCharFormat timestampFormat;
+        timestampFormat.setForeground(Qt::gray);
+        cursor.insertText("[" + timestamp + "]", timestampFormat);
+
+        cursor.insertText("\n");
 
         ui->messageDisplay->setTextCursor(cursor);
     }
 }
+
+
