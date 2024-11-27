@@ -20,7 +20,7 @@ networking::networking(User &user, QObject *parent)
     webSocket->open(url);
 
     // initialize public key cache
-    cachedPublicKeys = std::unordered_map<QString, RSA_keys>();
+    //cachedPublicKeys = std::unordered_map<QString, RSA_keys>();
 
     // this eyesore sets up websocket slots
     connect(webSocket, &QWebSocket::connected, this, &networking::onConnected);
@@ -29,8 +29,10 @@ networking::networking(User &user, QObject *parent)
     connect(webSocket, &QWebSocket::textMessageReceived, this, &networking::onMessageReceived);
 }
 
-// destructor
+// destructor though this never really gets called
 networking::~networking() {
+    // close any open network connections
+    closeConnection();
     delete webSocket;
 }
 
@@ -69,7 +71,8 @@ void networking::cacheUserPublicKey(const QString &username, const RSA_keys &key
 
 // webSocket event slots, these output on events (self explanatory)
 void networking::onConnected() {
-    //qDebug() << "WebSocket connected.";
+    qDebug() << "WebSocket connected.";
+    qDebug() << "Encryption method:" << user.getEncryptionMethod();
 
     // export user data to json to send to server
     QJsonObject userJson;
@@ -143,10 +146,10 @@ void networking::onMessageReceived(const QString &message) {
 // gets the requested user, including public key
 User networking::getUser(const QString &username) {
     // check if user is already in cache
-    if (cachedPublicKeys.find(username) != cachedPublicKeys.end()) {
-        // return cached user data
-        return User(username.toStdString(), user.getEncryptionMethod(), user.getRegenDuration(), cachedPublicKeys[username]);
-    }
+    // if (cachedPublicKeys.find(username) != cachedPublicKeys.end()) {
+    //     // return cached user data
+    //     return User(username.toStdString(), user.getEncryptionMethod(), user.getRegenDuration(), cachedPublicKeys[username]);
+    // }
 
     if (webSocket->state() == QAbstractSocket::ConnectedState) {
         QJsonObject requestJson;
@@ -165,7 +168,8 @@ User networking::getUser(const QString &username) {
         // connect to the lambda and store the connection ID
         QMetaObject::Connection connection = connect(webSocket, &QWebSocket::textMessageReceived, [&loop, &responseMessage](const QString &message) {
             responseMessage = message;
-            loop.quit();  // exit the event loop after receiving the message
+            // exit when message recieved
+            loop.quit();
         });
 
         // execute the event loop, waiting for the response
@@ -217,4 +221,26 @@ User networking::getUser(const QString &username) {
         qDebug() << "Connection not established. Cannot request public key!";
         return User();
     }
+}
+
+// just in case we want to close the connection
+void networking::closeConnection() {
+    if (webSocket->state() == QAbstractSocket::ConnectedState) {
+        webSocket->close();
+        qDebug() << "WebSocket connection closed.";
+    } else {
+        qDebug() << "WebSocket is already disconnected.";
+    }
+}
+
+// reconnect (particularly used when changing encryption methods
+void networking::reconnect() {
+    if (webSocket->state() == QAbstractSocket::ConnectedState) {
+        qDebug() << "WebSocket is already connected. Reconnecting...";
+        closeConnection();
+    }
+
+    QUrl url(host);
+    webSocket->open(url);
+    qDebug() << "Attempting to reconnect to WebSocket...";
 }

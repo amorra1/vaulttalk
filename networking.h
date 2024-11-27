@@ -24,6 +24,7 @@ public:
     is made then users cannot send messages, this function just attempts to re-establish that
     */
     void reconnect();
+    void closeConnection();
 
     // slots used for asynchronous events
 private slots:

@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->settingsPasswordBox->setEchoMode(QLineEdit::Password);
     ui->settingsUsernameBox->setReadOnly(true);
     ui->settingsPasswordBox->setReadOnly(true);
-    ui->methodDropdown->addItems({"RSA", "AES", "Cipher"});
+    ui->methodDropdown->addItems({"RSA", "AES", "Cipher", "None"});
     ui->regenDurationDropdown->addItems({"Never", "Daily", "Monthly"});
 
     // Connect buttons to switch between pages
@@ -337,13 +337,13 @@ void MainWindow::buildSettingsDisplay(){
 
     QLabel* encryptionMethodLabel = new QLabel("<b><u>Encryption Method:</u></b><br>");
     QLabel* regenDurationLabel = new QLabel("<b><u>Key Regeneration Period:</u></b><br>");
-    QLabel* publicKeyLabel = new QLabel("<b><u>Public Key:</u></b><br>");
-    QLabel* nLabel = new QLabel("<b><u>n Value:</u></b><br>" + publicKey_n);
-    QLabel* eLabel = new QLabel("<b><u>e Value:</u></b><br>" + publicKey_e);
+    // QLabel* publicKeyLabel = new QLabel("<b><u>Public Key:</u></b><br>");
+    // QLabel* nLabel = new QLabel("<b><u>n Value:</u></b><br>" + publicKey_n);
+    // QLabel* eLabel = new QLabel("<b><u>e Value:</u></b><br>" + publicKey_e);
 
     encryptionMethodLabel->setWordWrap(true);
     regenDurationLabel->setWordWrap(true);
-    publicKeyLabel->setWordWrap(true);
+    // publicKeyLabel->setWordWrap(true);
 
     QListWidgetItem* encryptionItem = new QListWidgetItem();
     ui->settingsDisplay->addItem(encryptionItem);
@@ -355,19 +355,19 @@ void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->addItem(regenDuration);
     ui->settingsDisplay->setItemWidget(regenDurationItem, regenDurationLabel);
 
-    QListWidgetItem* publicKeyItem = new QListWidgetItem();
-    ui->settingsDisplay->addItem(publicKeyItem);
-    ui->settingsDisplay->setItemWidget(publicKeyItem, publicKeyLabel);
+    // QListWidgetItem* publicKeyItem = new QListWidgetItem();
+    // ui->settingsDisplay->addItem(publicKeyItem);
+    // ui->settingsDisplay->setItemWidget(publicKeyItem, publicKeyLabel);
 
-    QListWidgetItem* nValueItem = new QListWidgetItem();
-    ui->settingsDisplay->addItem(nValueItem);
-    ui->settingsDisplay->addItem(publicKey_n);
-    ui->settingsDisplay->setItemWidget(nValueItem, nLabel);
+    // QListWidgetItem* nValueItem = new QListWidgetItem();
+    // ui->settingsDisplay->addItem(nValueItem);
+    // ui->settingsDisplay->addItem(publicKey_n);
+    // ui->settingsDisplay->setItemWidget(nValueItem, nLabel);
 
-    QListWidgetItem* eValueItem = new QListWidgetItem();
-    ui->settingsDisplay->addItem(eValueItem);
-    ui->settingsDisplay->addItem(publicKey_e);
-    ui->settingsDisplay->setItemWidget(eValueItem, eLabel);
+    // QListWidgetItem* eValueItem = new QListWidgetItem();
+    // ui->settingsDisplay->addItem(eValueItem);
+    // ui->settingsDisplay->addItem(publicKey_e);
+    // ui->settingsDisplay->setItemWidget(eValueItem, eLabel);
 }
 
 /* SETTINGS PAGE METHODS */
@@ -429,6 +429,9 @@ void MainWindow::saveChanges() {
             QString errorMessage = reply->errorString();
             QMessageBox::critical(this, "Error", "Failed to update user settings: " + errorMessage);
         }
+
+        // reconnect to the server (sends any new encrpyption changes)
+        network->reconnect();
 
         reply->deleteLater();
     });
