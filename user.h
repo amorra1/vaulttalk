@@ -57,6 +57,11 @@ public:
 
     QList<QString> requests;
 
+    // function to regenerate keys (called once key expires)
+    void regenerateKeys();
+
+    void checkRegen();
+
 private:
     std::string username;
     std::string hashedPassword;
@@ -64,7 +69,7 @@ private:
     std::string regenDuration;
     RSA_keys RSAKeys;
 
-
+    time_t lastKeyChanged;
 };
 
 #endif //USER_H
