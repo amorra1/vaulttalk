@@ -62,7 +62,12 @@ void User::setEncryptionMethod(string method) { this->encryptionMethod = method;
 
 // Getter and setter for regenDuration
 string User::getRegenDuration() const { return this->regenDuration; }
-void User::setRegenDuration(string duration) { this->regenDuration = duration; }
+void User::setRegenDuration(string duration) {
+    this->regenDuration = duration;
+
+    // write the time last changed
+    this->lastKeyChanged = time(nullptr);
+}
 
 // Getter for publicKey (returns the full key as a pair [n, e])
 std::pair<mpz_class, mpz_class> User::getPublicKey() const {
@@ -301,6 +306,27 @@ bool User::addContact(const QString& username, const QString& contactName) {
     reply->deleteLater();
 }
 
+void User::regenerateKeys() {
+    qDebug() << "Keys regenerated";
+    qDebug() << "Previous key:" << this->RSAKeys.publicKey;
+    this->RSAKeys = encryption::GenerateKeys();
+    qDebug() << "New key:" << this->RSAKeys.publicKey;
+}
 
+void User::checkRegen() {
+    // constants bc im lazy (one might call that good programming practice)
+    const int DAY = 86400;
+    const int WEEK = 604800;
+    const int MONTH = 2678400;
 
+    time_t current = time(nullptr);
+    int timeDiff = difftime(current, this->lastKeyChanged);
 
+    // if difference is greater than regen keys
+    if ((this->getRegenDuration() == "Per Session") ||
+        (this->getRegenDuration() == "Daily" && timeDiff >= DAY) ||
+        (this->getRegenDuration() == "Weekly" && timeDiff >= WEEK) ||
+        (this->getRegenDuration() == "Monthly" && timeDiff >= MONTH)) {
+        this->regenerateKeys();
+    }
+}

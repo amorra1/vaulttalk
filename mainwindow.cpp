@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->settingsUsernameBox->setReadOnly(true);
     ui->settingsPasswordBox->setReadOnly(true);
     ui->methodDropdown->addItems({"RSA", "AES", "ROT13", "Ceasar Cipher", "ELEC377 Cipher", "None"});
-    ui->regenDurationDropdown->addItems({"Never", "Daily", "Monthly"});
+    ui->regenDurationDropdown->addItems({"Never","Per Session", "Daily", "Monthly", "Weekly"});
     ui->caesarShiftDropdown->addItems({"1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
                                   "11", "12", "13", "14", "15", "16", "17", "18", "19",
                                   "20", "21", "22", "23", "24", "25", "26"});
@@ -253,6 +253,10 @@ void MainWindow::login() {
             ui->stackedWidget->setCurrentIndex(1);
             // update network user
             network = new networking(*currentUser);
+
+            // check the regeneration period
+            currentUser->checkRegen();
+
             connect(network, &networking::messageReceived, this, &MainWindow::displayReceivedMessage);
 
             ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
