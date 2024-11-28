@@ -768,3 +768,42 @@ std::string encryption::ROT13Decrypt(std::string message){
     //Return the encryptedMessage string
     return encryptedMessage;
 }
+
+//Function definitions for Ceaser Cipher
+//std::string CeaserEncrypt(std::string message);
+//std::string CeaserDecrypt(std::string message);
+//Function definitions for ELEC377
+std::string ELEC377Encrypt(std::string message){
+    std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+    std::string key = "XZNLWEBGJHQDYVTKFUOMPCIASRxznlwebgjhqdyvtkfuompciasr ";
+    std::string encryptedInput;
+    //Looping through every character of the input string
+    for(size_t i = 0; i<message.length(); i++){
+        //Finding the position of the current character in the alphabet string
+        size_t position = alphabet.find(message[i]);
+        //Appending the appropriate character from the key string to the encypted string
+        encryptedInput += key[position];
+
+    }
+    //Printing the decrypted string to the user and exiting the program
+    return encryptedInput;
+
+}
+std::string ELEC377Decrypt(std::string message){
+    std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+    std::string key = "XZNLWEBGJHQDYVTKFUOMPCIASRxznlwebgjhqdyvtkfuompciasr ";
+    std::string decryptedInput;
+    //Looping through every character of the input string
+    for(size_t i = 0; i<message.length(); i++){
+        //Finding the position of the current character in the key string
+        size_t position = key.find(message[i]);
+        //Appending the appropriate character from the alphabet string to the decrypted string
+        decryptedInput += alphabet[position];
+
+    }
+    //Printing the decrypted string to the user and exiting the program
+    return decryptedInput;
+}
+//Function definitions for Morse
+//std::string MorseEncrypt(std::string message);
+//std::string MorseDecrypt(std::string message);

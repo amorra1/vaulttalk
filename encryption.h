@@ -42,6 +42,15 @@ void KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]);
 //Function definitions for ROT13
 std::string ROT13Encrypt(std::string message);
 std::string ROT13Decrypt(std::string message);
+//Function definitions for Ceaser Cipher
+/*std::string CeaserEncrypt(std::string message);
+std::string CeaserDecrypt(std::string message);
+//Function definitions for ELEC377*/
+std::string ELEC377Encrypt(std::string message);
+std::string ELEC377Decrypt(std::string message);/*
+//Function definitions for Morse
+std::string MorseEncrypt(std::string message);
+std::string MorseDecrypt(std::string message);*/
 } // end namespace encryption
 
 #endif // ENCRYPTION_H
