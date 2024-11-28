@@ -720,3 +720,11 @@ void encryption::AESDecrypt(unsigned char * encryptedMessage, unsigned char * ex
         decryptedMessage[i] = state[i];
     }
 }
+
+//Cipher encryption methods
+std::string encryption::ROT13Encrypt(unsigned char *message){
+
+}
+std::string encryption::ROT13Decrypt(unsigned char *message){
+
+}
