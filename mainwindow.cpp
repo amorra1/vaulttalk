@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->settingsPasswordBox->setEchoMode(QLineEdit::Password);
     ui->settingsUsernameBox->setReadOnly(true);
     ui->settingsPasswordBox->setReadOnly(true);
-    ui->methodDropdown->addItems({"RSA", "AES", "Cipher", "None"});
+    ui->methodDropdown->addItems({"RSA", "AES", "ROT13", "Ceasar Cipher", "ELEC377 Cipher", "None"});
     ui->regenDurationDropdown->addItems({"Never", "Daily", "Monthly"});
 
     // Connect buttons to switch between pages
