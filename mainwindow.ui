@@ -671,6 +671,37 @@
        </rect>
       </property>
      </widget>
+     <widget class="QLabel" name="caesarShiftLabel">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>180</y>
+        <width>141</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Caesar Shift</string>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="caesarShiftDropdown">
+      <property name="geometry">
+       <rect>
+        <x>600</x>
+        <y>200</y>
+        <width>201</width>
+        <height>24</height>
+       </rect>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>
