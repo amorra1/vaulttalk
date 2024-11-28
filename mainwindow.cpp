@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->settingsPasswordBox->setEchoMode(QLineEdit::Password);
     ui->settingsUsernameBox->setReadOnly(true);
     ui->settingsPasswordBox->setReadOnly(true);
-    ui->methodDropdown->addItems({"RSA", "AES", "ROT13", "Ceasar Cipher", "ELEC377 Cipher", "None"});
+    ui->methodDropdown->addItems({"RSA", "AES", "ROT13", "Ceasar Cipher", "ELEC376 Cipher", "None"});
     ui->regenDurationDropdown->addItems({"Never","Per session", "Daily", "Monthly", "Weekly"});
     ui->caesarShiftDropdown->addItems({"1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
                                   "11", "12", "13", "14", "15", "16", "17", "18", "19",
