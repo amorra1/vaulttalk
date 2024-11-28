@@ -23,7 +23,7 @@ struct Contact {
 };
 
 // Default constructor
-User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDuration("") {
+User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDuration(""){
 }
 
 User::User(string username) : username(username), hashedPassword(""), encryptionMethod(""), regenDuration("") {
@@ -64,9 +64,6 @@ void User::setEncryptionMethod(string method) { this->encryptionMethod = method;
 string User::getRegenDuration() const { return this->regenDuration; }
 void User::setRegenDuration(string duration) {
     this->regenDuration = duration;
-
-    // write the time last changed
-    this->lastKeyChanged = time(nullptr);
 }
 
 // Getter for publicKey (returns the full key as a pair [n, e])
@@ -308,9 +305,9 @@ bool User::addContact(const QString& username, const QString& contactName) {
 
 void User::regenerateKeys() {
     qDebug() << "Keys regenerated";
-    qDebug() << "Previous key:" << this->RSAKeys.publicKey;
     this->RSAKeys = encryption::GenerateKeys();
-    qDebug() << "New key:" << this->RSAKeys.publicKey;
+    // write the time last changed
+    this->lastKeyChanged = time(nullptr);
 }
 
 void User::checkRegen() {
@@ -320,10 +317,11 @@ void User::checkRegen() {
     const int MONTH = 2678400;
 
     time_t current = time(nullptr);
-    int timeDiff = difftime(current, this->lastKeyChanged);
+    int timeDiff = current - this->lastKeyChanged;
+    qDebug() << "Epoch time since last key change: " << timeDiff;
 
     // if difference is greater than regen keys
-    if ((this->getRegenDuration() == "Per Session") ||
+    if ((this->getRegenDuration() == "Per session") ||
         (this->getRegenDuration() == "Daily" && timeDiff >= DAY) ||
         (this->getRegenDuration() == "Weekly" && timeDiff >= WEEK) ||
         (this->getRegenDuration() == "Monthly" && timeDiff >= MONTH)) {
