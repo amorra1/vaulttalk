@@ -723,6 +723,19 @@ void encryption::AESDecrypt(unsigned char * encryptedMessage, unsigned char * ex
 
 //Cipher encryption methods
 std::string encryption::ROT13Encrypt(unsigned char *message){
+    //Initializing a return String
+    std::string encryptedMessage;
+    //Creating a for loop to
+    for (unsigned char* iterator = message; *iterator != '\0'; ++iterator) {
+        if (*iterator >= 'A' && *iterator <= 'Z') {
+            encryptedMessage += (*iterator - 'A' + 13) % 26 + 'A';
+        } else if (*iterator >= 'a' && *iterator <= 'z') {
+            encryptedMessage += (*iterator - 'a' + 13) % 26 + 'a';
+        } else {
+            encryptedMessage += *iterator; // Non-alphabetic characters remain unchanged
+        }
+    }
+    return encryptedMessage;
 
 }
 std::string encryption::ROT13Decrypt(unsigned char *message){
