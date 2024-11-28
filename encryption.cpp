@@ -745,6 +745,26 @@ std::string encryption::ROT13Encrypt(unsigned char *message){
     return encryptedMessage;
 
 }
-std::string encryption::ROT13Decrypt(unsigned char *message){
 
+std::string encryption::ROT13Decrypt(unsigned char *message){
+    //Initializing a return String
+    std::string encryptedMessage;
+    //Creating a for loop to iterate through each character in the given string
+    for (unsigned char* iterator = message; *iterator != '\0'; ++iterator) {
+        //Handle capitalized characters
+        if (*iterator >= 'A' && *iterator <= 'Z') {
+            encryptedMessage += (*iterator - 'A' + 13) % 26 + 'A';
+        }
+        //Handle lowercase characters
+        else if (*iterator >= 'a' && *iterator <= 'z') {
+            encryptedMessage += (*iterator - 'a' + 13) % 26 + 'a';
+        }
+        //All other characters are ignored
+        else {
+            //Move forward in the string
+            encryptedMessage += *iterator;
+        }
+    }
+    //Return the encryptedMessage string
+    return encryptedMessage;
 }
