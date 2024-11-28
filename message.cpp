@@ -111,7 +111,11 @@ string Message::getEncryptedContent(const User &user) const {
         delete[] paddedMessage;
         delete[] encryptedMessage;
     }
-
+    //Encrypting using the ROT13 function in encryption
+    else if(method == "ROT13"){
+        //Need to provide message string
+        decryptedMessage = encryption::ROT13Encrypt();
+    }
     return encryptedString;
 }
 
@@ -175,7 +179,11 @@ string Message::getDecryptedContent(const User &user) const {
         // Convert decrypted binary back to string
         decryptedMessage.assign(reinterpret_cast<char*>(decryptedBuffer.data()), decryptedLen);
     }
-
+    //Decrypting using the ROT13 function in encryption
+    else if(method == "ROT13"){
+        //Need to provide message string
+        decryptedMessage = encryption::ROT13Decrypt();
+    }
     return decryptedMessage;
 }
 void Message::displayMessage() const {
