@@ -114,7 +114,7 @@ string Message::getEncryptedContent(const User &user) const {
     //Encrypting using the ROT13 function in encryption
     else if(method == "ROT13"){
         //Need to provide message string
-        decryptedMessage = encryption::ROT13Encrypt();
+        encryptedString = encryption::ROT13Encrypt(encryptedString);
     }
     return encryptedString;
 }
@@ -182,7 +182,7 @@ string Message::getDecryptedContent(const User &user) const {
     //Decrypting using the ROT13 function in encryption
     else if(method == "ROT13"){
         //Need to provide message string
-        decryptedMessage = encryption::ROT13Decrypt();
+        decryptedMessage = encryption::ROT13Decrypt(decryptedMessage);
     }
     return decryptedMessage;
 }

@@ -722,23 +722,23 @@ void encryption::AESDecrypt(unsigned char * encryptedMessage, unsigned char * ex
 }
 
 //Cipher encryption methods
-std::string encryption::ROT13Encrypt(unsigned char *message){
+std::string encryption::ROT13Encrypt(std::string message){
     //Initializing a return String
     std::string encryptedMessage;
     //Creating a for loop to iterate through each character in the given string
-    for (unsigned char* iterator = message; *iterator != '\0'; ++iterator) {
+    for (char iterator : message) {
         //Handle capitalized characters
-        if (*iterator >= 'A' && *iterator <= 'Z') {
-            encryptedMessage += (*iterator - 'A' + 13) % 26 + 'A';
+        if (iterator >= 'A' && iterator <= 'Z') {
+            encryptedMessage += (iterator - 'A' + 13) % 26 + 'A';
         }
         //Handle lowercase characters
-        else if (*iterator >= 'a' && *iterator <= 'z') {
-            encryptedMessage += (*iterator - 'a' + 13) % 26 + 'a';
+        else if (iterator >= 'a' && iterator <= 'z') {
+            encryptedMessage += (iterator - 'a' + 13) % 26 + 'a';
         }
         //All other characters are ignored
         else {
             //Move forward in the string
-            encryptedMessage += *iterator;
+            encryptedMessage += iterator;
         }
     }
     //Return the encryptedMessage string
@@ -746,23 +746,23 @@ std::string encryption::ROT13Encrypt(unsigned char *message){
 
 }
 
-std::string encryption::ROT13Decrypt(unsigned char *message){
+std::string encryption::ROT13Decrypt(std::string message){
     //Initializing a return String
     std::string encryptedMessage;
     //Creating a for loop to iterate through each character in the given string
-    for (unsigned char* iterator = message; *iterator != '\0'; ++iterator) {
+    for (char iterator : message) {
         //Handle capitalized characters
-        if (*iterator >= 'A' && *iterator <= 'Z') {
-            encryptedMessage += (*iterator - 'A' + 13) % 26 + 'A';
+        if (iterator >= 'A' && iterator <= 'Z') {
+            encryptedMessage += (iterator - 'A' + 13) % 26 + 'A';
         }
         //Handle lowercase characters
-        else if (*iterator >= 'a' && *iterator <= 'z') {
-            encryptedMessage += (*iterator - 'a' + 13) % 26 + 'a';
+        else if (iterator >= 'a' && iterator <= 'z') {
+            encryptedMessage += (iterator - 'a' + 13) % 26 + 'a';
         }
         //All other characters are ignored
         else {
             //Move forward in the string
-            encryptedMessage += *iterator;
+            encryptedMessage += iterator;
         }
     }
     //Return the encryptedMessage string
