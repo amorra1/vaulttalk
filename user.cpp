@@ -328,6 +328,40 @@ void User::regenerateKeys() {
     this->RSAKeys = encryption::GenerateKeys();
     // write the time last changed
     this->lastKeyChanged = time(nullptr);
+
+    QNetworkAccessManager* networkManager = new QNetworkAccessManager();
+
+    QJsonObject json;
+    json["username"] = QString::fromStdString(this->username);
+    json["lastKeyChanged"] = QString::number(static_cast<qint64>(this->lastKeyChanged));
+
+    QJsonObject publicKey;
+    publicKey["n"] = QString::fromStdString(this->RSAKeys.publicKey[0].get_str(16));
+    publicKey["e"] = QString::fromStdString(this->RSAKeys.publicKey[1].get_str(16));
+
+    QJsonObject privateKey;
+    privateKey["n"] = QString::fromStdString(this->RSAKeys.privateKey[0].get_str(16));
+    privateKey["d"] = QString::fromStdString(this->RSAKeys.privateKey[1].get_str(16));
+
+    json["publicKey"] = publicKey;
+    json["privateKey"] = privateKey;
+
+    QJsonDocument jsonDoc(json);
+
+    QUrl url("http://127.0.0.1:8000/update-keys");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QNetworkReply* reply = networkManager->post(request, jsonDoc.toJson());
+
+    QObject::connect(reply, &QNetworkReply::finished, [reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            qDebug() << "Keys updated successfully!";
+        } else {
+            qDebug() << "Error updating keys:" << reply->errorString();
+        }
+        reply->deleteLater();
+    });
 }
 
 void User::checkRegen() {

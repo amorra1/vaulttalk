@@ -18,7 +18,6 @@ int main(int argc, char *argv[])
     // RSA_keys keys = encryption::GenerateKeys();
     // unsigned long long encrypted = encryption::RSA_Encrypt(testMsg, keys);
     // string decrypted = encryption::RSA_Decrypt(encrypted, keys);
-
     MainWindow w;
     w.show();
 
