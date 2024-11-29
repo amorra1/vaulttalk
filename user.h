@@ -38,6 +38,7 @@ public:
     RSA_keys getKeys() const;
     QList<Contact> getContactsList(const QString& username);
     bool addContact(const QString& username, const QString& contactName);
+    time_t getLastKeyChanged() const;
 
     void setUsername(std::string name);
     void setPassword(std::string password);
@@ -48,6 +49,7 @@ public:
     void addRequest(QString user);
     void removeRequest(QString user);
     QList<QString> getRequests() const;
+    void setLastKeyChanged(time_t lastKeyChanged);
 
     static std::string hashPassword(const std::string &password);
 

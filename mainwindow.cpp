@@ -339,18 +339,25 @@ void MainWindow::buildSettingsDisplay(){
     qDebug() << "settings display" + currentUser->getEncryptionMethod();
     QString regenDuration = QString::fromStdString(currentUser->getRegenDuration());
 
+    time_t lastKeyChanged = currentUser->getLastKeyChanged();
+    char buffer[100];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", std::localtime(&lastKeyChanged));
+    QString lastKeyChangedStr = QString::fromStdString(buffer);
+
     RSA_keys publicKeyPair = currentUser->getKeys();
     QString publicKey_n = QString::fromStdString(publicKeyPair.publicKey[0].get_str(16));
     QString publicKey_e = QString::fromStdString(publicKeyPair.publicKey[1].get_str(16));
 
     QLabel* encryptionMethodLabel = new QLabel("<b><u>Encryption Method:</u></b><br>");
     QLabel* regenDurationLabel = new QLabel("<b><u>Key Regeneration Period:</u></b><br>");
+    QLabel* lastKeyChangedLabel = new QLabel("<b><u>Last Key Changed:</u></b><br>" + lastKeyChangedStr);
     // QLabel* publicKeyLabel = new QLabel("<b><u>Public Key:</u></b><br>");
     // QLabel* nLabel = new QLabel("<b><u>n Value:</u></b><br>" + publicKey_n);
     // QLabel* eLabel = new QLabel("<b><u>e Value:</u></b><br>" + publicKey_e);
 
     encryptionMethodLabel->setWordWrap(true);
     regenDurationLabel->setWordWrap(true);
+    lastKeyChangedLabel->setWordWrap(true);
     // publicKeyLabel->setWordWrap(true);
 
     QListWidgetItem* encryptionItem = new QListWidgetItem();
@@ -362,6 +369,11 @@ void MainWindow::buildSettingsDisplay(){
     ui->settingsDisplay->addItem(regenDurationItem);
     ui->settingsDisplay->addItem(regenDuration);
     ui->settingsDisplay->setItemWidget(regenDurationItem, regenDurationLabel);
+
+    QListWidgetItem* lastKeyChangedItem = new QListWidgetItem();
+    ui->settingsDisplay->addItem(lastKeyChangedItem);
+    ui->settingsDisplay->addItem(lastKeyChangedStr);
+    ui->settingsDisplay->setItemWidget(lastKeyChangedItem, lastKeyChangedLabel);
 
     // QListWidgetItem* publicKeyItem = new QListWidgetItem();
     // ui->settingsDisplay->addItem(publicKeyItem);

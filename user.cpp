@@ -39,7 +39,7 @@ User::User(string username, string password, string method, string duration)
 
 // Constructor with username, password, and keys
 User::User(string username, string password, RSA_keys keys)
-    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never"), RSAKeys(keys) {}
+    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never"), RSAKeys(keys), lastKeyChanged(std::time(nullptr)) {}
 
 User::User(string username, string encryptionMethod, string regenDuration, RSA_keys keys)
     : username(username), encryptionMethod(encryptionMethod), regenDuration(regenDuration), RSAKeys(keys) {}
@@ -64,6 +64,14 @@ void User::setEncryptionMethod(string method) { this->encryptionMethod = method;
 string User::getRegenDuration() const { return this->regenDuration; }
 void User::setRegenDuration(string duration) {
     this->regenDuration = duration;
+}
+
+//Getter and Setter for lastKeyChanged
+time_t User::getLastKeyChanged() const {
+    return lastKeyChanged;
+}
+void User::setLastKeyChanged(time_t lastKeyChanged) {
+    this->lastKeyChanged = lastKeyChanged;
 }
 
 // Getter for publicKey (returns the full key as a pair [n, e])
@@ -131,6 +139,7 @@ void User::registerUser(User user) {
     json["password"] = QString::fromStdString(user.hashedPassword);
     json["encryptionMethod"] = QString::fromStdString(user.encryptionMethod);
     json["regenDuration"] = QString::fromStdString(user.regenDuration);
+    json["lastKeyChanged"] = QString::number(static_cast<qint64>(user.lastKeyChanged));
 
     QJsonObject publicKey;
     publicKey["n"] = QString::fromStdString(user.RSAKeys.publicKey[0].get_str(16));
@@ -199,6 +208,17 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
                 }
                 if (jsonObject.contains("regenDuration")) {
                     user.setRegenDuration(jsonObject["regenDuration"].toString().toStdString());
+                }
+                if (jsonObject.contains("lastKeyChanged")) {
+                    QString lastKeyChangedStr = jsonObject["lastKeyChanged"].toString();
+                    bool conversionSuccessful = false;
+                    time_t lastKeyChanged = static_cast<time_t>(lastKeyChangedStr.toLongLong(&conversionSuccessful));
+                    qDebug() << "got time: " + lastKeyChangedStr;
+                    if (conversionSuccessful) {
+                        user.setLastKeyChanged(lastKeyChanged);
+                    } else {
+                        qDebug() << "Failed to convert lastKeyChanged to time_t";
+                    }
                 }
 
                 if (jsonObject.contains("publicKey")) {
