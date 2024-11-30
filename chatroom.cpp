@@ -10,7 +10,7 @@ Chatroom::Chatroom(const std::string& chatroomName) : name(chatroomName) {}
 
 int Chatroom::addMessage(const Message &message) {
     try {
-        chatLog.push_back(message);
+        chatLog.push_back(message); //push message onto list
     } catch (...) {
         return 0;
     }
@@ -19,7 +19,7 @@ int Chatroom::addMessage(const Message &message) {
 
 int Chatroom::addMember(const User &user) {
     try {
-        members.push_back(user);
+        members.push_back(user); //push back message on list with containing user
     } catch (...) {
         return 0;
     }
@@ -27,7 +27,7 @@ int Chatroom::addMember(const User &user) {
 }
 
 int Chatroom::removeMember(const std::string &username) {
-    for (auto it = members.begin(); it != members.end(); ++it) {
+    for (auto it = members.begin(); it != members.end(); ++it) { //search for given username
         if (it->getUsername() == username) {
             return 1;
         }

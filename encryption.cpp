@@ -797,8 +797,8 @@ std::string encryption::ROT13Decrypt(std::string message){
 //Function definitions for Ceaser Cipher
 //std::string CeaserEncrypt(std::string message);
 //std::string CeaserDecrypt(std::string message);
-//Function definitions for ELEC377
-std::string ELEC377Encrypt(std::string message){
+//Function definitions for ELEC376
+std::string encryption::ELEC376Encrypt(std::string message){
     std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ";
     std::string key = "XZNLWEBGJHQDYVTKFUOMPCIASRxznlwebgjhqdyvtkfuompciasr ";
     std::string encryptedInput;
@@ -814,7 +814,7 @@ std::string ELEC377Encrypt(std::string message){
     return encryptedInput;
 
 }
-std::string ELEC377Decrypt(std::string message){
+std::string encryption::ELEC376Decrypt(std::string message){
     std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ";
     std::string key = "XZNLWEBGJHQDYVTKFUOMPCIASRxznlwebgjhqdyvtkfuompciasr ";
     std::string decryptedInput;
@@ -829,6 +829,7 @@ std::string ELEC377Decrypt(std::string message){
     //Printing the decrypted string to the user and exiting the program
     return decryptedInput;
 }
+
 //Function definitions for Morse
 //std::string MorseEncrypt(std::string message);
 //std::string MorseDecrypt(std::string message);

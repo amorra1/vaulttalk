@@ -48,8 +48,8 @@ std::string ROT13Decrypt(std::string message);
 /*std::string CeaserEncrypt(std::string message);
 std::string CeaserDecrypt(std::string message);
 //Function definitions for ELEC377*/
-std::string ELEC377Encrypt(std::string message);
-std::string ELEC377Decrypt(std::string message);/*
+std::string ELEC376Encrypt(std::string message);
+std::string ELEC376Decrypt(std::string message);/*
 //Function definitions for Morse
 std::string MorseEncrypt(std::string message);
 std::string MorseDecrypt(std::string message);*/

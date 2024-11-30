@@ -60,10 +60,6 @@ string Message::getEncryptedContent(const User &user) const {
         unsigned char * encryptedMessage = new unsigned char[paddedMessageLen];
 
         string AESKey = encryption::generateAESKey(); // Store the key in the instance
-        if (AESKey.empty()) {
-            cerr << "Error: Failed to generate AES Key!" << endl;
-        }
-        cout << "Debug: this->AESKey after generation: " << AESKey << endl;
 
         // Convert the string to a 16-byte array
         istringstream hex_chars_stream(AESKey);
@@ -95,14 +91,12 @@ string Message::getEncryptedContent(const User &user) const {
         // Convert the stream to a string
         encryptedString = hexStream.str();
 
-        cout << "this is the encrypted string: " << encryptedString << endl;
-
         // Clean up allocated memory
         delete[] paddedMessage;
         delete[] encryptedMessage;
     }
     //Encrypting using the ROT13 function in encryption
-    else if(method == "ROT13") {
+    else if(method == "ROT13"){
         //Need to provide message string
         encryptedString = encryption::ROT13Encrypt(encryptedString);
     }
@@ -110,6 +104,7 @@ string Message::getEncryptedContent(const User &user) const {
         //Need to provide message string
         encryptedString = encryption::ELEC376Encrypt(encryptedString);
     }
+
     return encryptedString;
 }
 
@@ -123,7 +118,7 @@ string Message::getDecryptedContent(const User &user) const {
     } else if (method == "AES") {
         // Read AES key from file
         string key;
-        ifstream infile("aes_keyfile.txt", ios::in | ios::binary);
+        ifstream infile("C:/Users/niket/OneDrive/Desktop/Coursework/3rd_year_fall_sem/vaulttalk/aes_keyfile.txt", ios::in | ios::binary);
         if (!infile) {
             qDebug() << "Error: Unable to open aes_keyfile. Ensure the file exists in the working directory.";
             return decryptedMessage;
@@ -201,8 +196,13 @@ string Message::getDecryptedContent(const User &user) const {
         //Need to provide message string
         decryptedMessage = encryption::ROT13Decrypt(decryptedMessage);
     }
+    else if(method == "ELEC376 Cipher"){
+        //Need to provide message string
+        decryptedMessage = encryption::ELEC376Decrypt(decryptedMessage);
+    }
     return decryptedMessage;
 }
+
 //used for debugging
 void Message::displayMessage() const {
     cout << "From: " << sender.getUsername()
