@@ -102,14 +102,14 @@ RSA_keys User::getKeys() const {
 
 void User::addRequest(QString user) {
     if (!requests.contains(user)) {
-        this->requests.append(user);
+        this->requests.append(user); //appends the request from the user to the requests list if it doesnt already exist
         qDebug() << "added user: " + user;
     }
 }
 
 void User::removeRequest(QString user) {
     if (requests.contains(user)) {
-        requests.removeAll(user);
+        requests.removeAll(user); //if that user is in the requests list, remove it
     }
 }
 
@@ -134,6 +134,7 @@ string User::hashPassword(const string &password) {
 void User::registerUser(User user) {
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
+    //create json object and add necessary parameters
     QJsonObject json;
     json["username"] = QString::fromStdString(user.username);
     json["password"] = QString::fromStdString(user.hashedPassword);
@@ -153,7 +154,8 @@ void User::registerUser(User user) {
     json["privateKey"] = privateKey;
 
     QJsonDocument jsonDoc(json);
-
+\
+    //make the api call
     QNetworkRequest request(QUrl("http://127.0.0.1:8000/register"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
@@ -161,7 +163,7 @@ void User::registerUser(User user) {
 
     QObject::connect(reply, &QNetworkReply::finished, [reply]() {
         if (reply->error() == QNetworkReply::NoError) {
-            QMessageBox::information(nullptr, "Success", "User registered successfully!");
+            QMessageBox::information(nullptr, "Success", "User registered successfully!"); // on success, notify user
         } else {
             QByteArray responseData = reply->readAll();
             QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
@@ -180,12 +182,14 @@ void User::registerUser(User user) {
 void User::loginUser(User &user, std::function<void(bool)> callback) {
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
+    //create the json object
     QJsonObject json;
     json.insert("username", QString::fromStdString(user.getUsername()));
     json.insert("password", QString::fromStdString(user.getPassword()));
 
     QJsonDocument jsonDoc(json);
 
+    //make the api call
     QNetworkRequest request(QUrl("http://127.0.0.1:8000/login"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
@@ -193,23 +197,27 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
 
     QObject::connect(reply, &QNetworkReply::finished, [reply, callback, &user]() {
         bool successCheck = false;
-        if (reply->error() == QNetworkReply::NoError) {
+        if (reply->error() == QNetworkReply::NoError) { // if success, parse the incoming info from server
             QByteArray responseData = reply->readAll();
             QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
             QJsonObject jsonObject = jsonResponse.object();
 
-            if (jsonObject.contains("msg") && jsonObject["msg"].toString() == "Login successful") {
+            if (jsonObject.contains("msg") && jsonObject["msg"].toString() == "Login successful") { //if the server sends back info
                 qDebug() << "Login successful";
                 successCheck = true;
 
+                //check for encryption method
                 if (jsonObject.contains("encryptionMethod")) {
                     qDebug() << jsonObject["encryptionMethod"].toString().toStdString();
                     user.setEncryptionMethod(jsonObject["encryptionMethod"].toString().toStdString());
                 }
+                //check for regenDuration
                 if (jsonObject.contains("regenDuration")) {
                     user.setRegenDuration(jsonObject["regenDuration"].toString().toStdString());
                 }
+                //check for lastKeyChanged
                 if (jsonObject.contains("lastKeyChanged")) {
+                    //have to convert back from int to time_t type
                     QString lastKeyChangedStr = jsonObject["lastKeyChanged"].toString();
                     bool conversionSuccessful = false;
                     time_t lastKeyChanged = static_cast<time_t>(lastKeyChangedStr.toLongLong(&conversionSuccessful));
@@ -220,7 +228,7 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
                         qDebug() << "Failed to convert lastKeyChanged to time_t";
                     }
                 }
-
+                //check for publicKey
                 if (jsonObject.contains("publicKey")) {
                     QJsonObject publicKey = jsonObject["publicKey"].toObject();
                     user.setPublicKey(
@@ -228,6 +236,7 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
                         mpz_class(publicKey["e"].toString().toStdString(), 16)
                         );
                 }
+                //check for private key
                 if (jsonObject.contains("privateKey")) {
                     QJsonObject privateKey = jsonObject["privateKey"].toObject();
                     user.setPrivateKey(
@@ -236,7 +245,7 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
                         );
                 }
             }
-        } else {
+        } else { //if fails tell user
             QByteArray responseData = reply->readAll();
             QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
             QJsonObject jsonObject = jsonResponse.object();
@@ -253,7 +262,7 @@ void User::loginUser(User &user, std::function<void(bool)> callback) {
 }
 QList<User::Contact> User::getContactsList(const QString& username) {
     QNetworkAccessManager networkManager;
-
+    //make the api call to get the the list of contacts from the server with username
     QString url = QString("http://127.0.0.1:8000/get-contacts/%1").arg(username);
 
     QUrl requestUrl(url);
@@ -268,32 +277,35 @@ QList<User::Contact> User::getContactsList(const QString& username) {
 
     QList<User::Contact> contactsList;
 
-    if (reply->error() == QNetworkReply::NoError) {
+    if (reply->error() == QNetworkReply::NoError) { //if success
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
         QJsonObject jsonObject = jsonResponse.object();
 
+        //check for contacts in api response
         if (jsonObject.contains("contacts")) {
             QJsonObject contacts = jsonObject["contacts"].toObject();
 
+            //loop through all the contcts in the response
             for (const QString& contactName : contacts.keys()) {
                 QJsonObject contactInfo = contacts[contactName].toObject();
                 QString publicKeyN = contactInfo["publicKey"].toObject()["n"].toString();
                 QString publicKeyE = contactInfo["publicKey"].toObject()["e"].toString();
 
-                contactsList.append({contactName, publicKeyN, publicKeyE});
+                contactsList.append({contactName, publicKeyN, publicKeyE}); // append their info to the contacts list
             }
         }
     } else {
-        QMessageBox::critical(nullptr, "Error", "Failed to retrieve contacts.");
+        QMessageBox::critical(nullptr, "Error", "Failed to retrieve contacts."); //if failed tell user
     }
 
     reply->deleteLater();
-    return contactsList;
+    return contactsList; //return the list
 }
 bool User::addContact(const QString& username, const QString& contactName) {
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
+    //create api call with username as argument
     QUrl url("http://127.0.0.1:8000/add-contact/" + username);
     QUrlQuery query;
     query.addQueryItem("contactUsername", contactName);
@@ -308,7 +320,7 @@ bool User::addContact(const QString& username, const QString& contactName) {
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 
-    if (reply->error() != QNetworkReply::NoError) {
+    if (reply->error() != QNetworkReply::NoError) { //if error tell user
         QByteArray responseData = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(responseData);
         QJsonObject jsonObject = jsonResponse.object();
@@ -331,9 +343,10 @@ void User::regenerateKeys() {
 
     QNetworkAccessManager* networkManager = new QNetworkAccessManager();
 
+    //create json object to send new date and keys to server
     QJsonObject json;
     json["username"] = QString::fromStdString(this->username);
-    json["lastKeyChanged"] = QString::number(static_cast<qint64>(this->lastKeyChanged));
+    json["lastKeyChanged"] = QString::number(static_cast<qint64>(this->lastKeyChanged)); //send as an int, just easier to understand on sever and json
 
     QJsonObject publicKey;
     publicKey["n"] = QString::fromStdString(this->RSAKeys.publicKey[0].get_str(16));
@@ -348,6 +361,7 @@ void User::regenerateKeys() {
 
     QJsonDocument jsonDoc(json);
 
+    //make api call
     QUrl url("http://127.0.0.1:8000/update-keys");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");

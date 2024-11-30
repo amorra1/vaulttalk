@@ -108,19 +108,21 @@ void MainWindow::onSendButtonClicked() {
         return;
     }
 
+    //search for if a chatroom exists already
     auto it = std::find_if(chatrooms.begin(), chatrooms.end(),
                            [&receiverUsername](const Chatroom& chatroom) {
                                return chatroom.getName() == receiverUsername;
                            });
 
+    // initalize a charoom and msg object
     Chatroom* chatroom = nullptr;
     Message msg(*currentUser, content);
 
-    if (it != chatrooms.end()) {
+    if (it != chatrooms.end()) { //if exists, set chatroom to that address
         chatroom = &(*it);
-    } else {
+    } else { //otherwise create new chatroom
         Chatroom newChatroom(receiverUsername, currentUser->getUsername(), receiverUsername);
-        chatrooms.push_back(newChatroom);
+        chatrooms.push_back(newChatroom); //add to chatrooms list
         chatroom = &chatrooms.back();
     }
 
@@ -133,12 +135,14 @@ void MainWindow::onSendButtonClicked() {
     //network->reconnect();
     currentChatroom = chatroom;
 
+    // try to send the message
     if(network->sendMessage(ui->receiverInput->text(), msg, *currentUser) && !content.empty()){
-        chatroom->addMessage(msg);
+        chatroom->addMessage(msg); //add message to list of the current chatroom
 
         QTextCursor cursor = ui->messageDisplay->textCursor();
         QTextBlockFormat blockFormat = cursor.blockFormat();
 
+        //create a format to properly display time stamp on right side
         QList<QTextOption::Tab> tabPositions;
         QTextOption::Tab rightTab;
         rightTab.type = QTextOption::RightTab;
@@ -148,18 +152,22 @@ void MainWindow::onSendButtonClicked() {
         blockFormat.setTabPositions(tabPositions);
         cursor.setBlockFormat(blockFormat);
 
+        //get the timestamp from the messages
         time_t tempTimestamp = msg.getTimestamp();
         QString timestamp = QString::fromStdString(std::string(std::ctime(&tempTimestamp))).trimmed();
 
+        //display the user's name in green
         QTextCharFormat userFormat;
         userFormat.setForeground(Qt::green);
         QString userLabel = QString::fromStdString(currentUser->getUsername()) + ": ";
         cursor.insertText(userLabel, userFormat);
 
+        //display the message content in white
         QTextCharFormat messageFormat;
         messageFormat.setForeground(Qt::white);
         cursor.insertText(QString::fromStdString(content), messageFormat);
 
+        //tab over and display timestamp in gray
         cursor.insertText("\t");
         QTextCharFormat timestampFormat;
         timestampFormat.setForeground(Qt::gray);
@@ -169,7 +177,7 @@ void MainWindow::onSendButtonClicked() {
 
         ui->messageDisplay->setTextCursor(cursor);
 
-        ui->messageInput->clear();
+        ui->messageInput->clear(); //clear message input box
     } else {
         QMessageBox::critical(nullptr, "Error", "Message failed to send.");
     }
@@ -178,6 +186,7 @@ void MainWindow::displayReceivedMessage(QString user, QString message){
     qDebug() << "signal hit";
     qDebug() << user;
 
+    //search for chatroom if it already exists
     auto it = std::find_if(chatrooms.begin(), chatrooms.end(),
                            [&user](const Chatroom& chatroom) {
                                return chatroom.getName() == user.toStdString();
@@ -185,24 +194,25 @@ void MainWindow::displayReceivedMessage(QString user, QString message){
 
     Chatroom* chatroom = nullptr;
 
-    if (it != chatrooms.end()) {
+    if (it != chatrooms.end()) { //if chatroom exists, set current to address of it
         chatroom = &(*it);
-    } else {
+    } else { //otherwise, create a new chatroom
         Chatroom newChatroom(user.toStdString(), currentUser->getUsername(), user.toStdString());
-        chatrooms.push_back(newChatroom);
+        chatrooms.push_back(newChatroom); // add to list of chatrooms
         chatroom = &chatrooms.back();
     }
 
-    User tempUser(user.toStdString());
+    User tempUser(user.toStdString()); //create a temporary user to be able to create a message object
     Message msg(tempUser, message.toStdString());
 
-    // Add the message to the chatroom's chatlog
+    //add the message to the chatroom's chatlog
     chatroom->addMessage(msg);
 
-    if(chatroom == currentChatroom){
+    if(chatroom == currentChatroom){ //if the current chatroom on the screen is the chatroom we just created then display the message
         QTextCursor cursor = ui->messageDisplay->textCursor();
         QTextBlockFormat blockFormat = cursor.blockFormat();
 
+        //create a tab formatting
         QList<QTextOption::Tab> tabPositions;
         QTextOption::Tab rightTab;
         rightTab.type = QTextOption::RightTab;
@@ -212,17 +222,21 @@ void MainWindow::displayReceivedMessage(QString user, QString message){
         blockFormat.setTabPositions(tabPositions);
         cursor.setBlockFormat(blockFormat);
 
+        //get the timestamp
         time_t tempTimestamp = msg.getTimestamp();
         QString timestamp = QString::fromStdString(std::string(std::ctime(&tempTimestamp))).trimmed();
 
+        //get the user who sent and display their name in yellow
         QTextCharFormat userFormat;
         userFormat.setForeground(Qt::yellow);
         cursor.insertText(user + ": ", userFormat);
 
+        //display the message content in white
         QTextCharFormat messageFormat;
         messageFormat.setForeground(Qt::white);
         cursor.insertText(message, messageFormat);
 
+        //tab over and display timestamp in gray
         cursor.insertText("\t");
         QTextCharFormat timestampFormat;
         timestampFormat.setForeground(Qt::gray);
@@ -232,7 +246,7 @@ void MainWindow::displayReceivedMessage(QString user, QString message){
 
         ui->messageDisplay->setTextCursor(cursor);
     } else{
-        // turn contact red
+        //otherwise, notify the user
         notificationReceived(user);
     }
 
@@ -244,10 +258,12 @@ void MainWindow::login() {
     QString username = ui->usernameInput->text();
     QString password = ui->passwordInput->text();
 
+    //ensure currentUser is wiped
     delete currentUser;
 
+    //reinitialize current user
     currentUser = new User(username.toStdString(), password.toStdString());
-    currentUser->loginUser(*currentUser, [this](bool success) {
+    currentUser->loginUser(*currentUser, [this](bool success) { //log them in and wait for a callback
         if (success) {
             qDebug() << "Callback: Login was successful!";
             ui->stackedWidget->setCurrentIndex(1);
@@ -257,9 +273,12 @@ void MainWindow::login() {
             // check the regeneration period
             currentUser->checkRegen();
 
+            //connect the network now that its been initialized to displaying received messages
             connect(network, &networking::messageReceived, this, &MainWindow::displayReceivedMessage);
 
+            //set the label at top of UI to their username
             ui->usernameLabel->setText(QString::fromStdString(currentUser->getUsername()));
+            //call methods to build necessary UI elements
             buildSettingsDisplay();
             buildSettingsPage();
             buildContactList();
@@ -278,6 +297,7 @@ void MainWindow::logout() {
         ui->usernameInput->clear();
     }
 
+    //clear necessary UI elements
     ui->messageDisplay->clear();
     ui->receiverInput->clear();
     ui->settingsDisplay->clear();
@@ -300,6 +320,7 @@ void MainWindow::logout() {
     ui->stackedWidget->setCurrentIndex(0);
 }
 void MainWindow::registerUser() {
+    //get inputs
     QString username = ui->signUpUsernameInput->text();
     QString password = ui->signUpPasswordInput->text();
 
@@ -327,27 +348,33 @@ void MainWindow::registerUser() {
     //if passwords match, create user object and send data to server to be stored
     RSA_keys keys = encryption::GenerateKeys();
 
+    //initalize user and call register method
     currentUser = new User(username.toStdString(), password.toStdString(), keys);
     currentUser->registerUser(*currentUser);
 }
 
 /* QUICK VIEW SETTINGS METHODS */
 void MainWindow::buildSettingsDisplay(){
+    //initally clear the display incase anything remains
     ui->settingsDisplay->clear();
 
+    //get the encryption method and regen duration
     QString encryptionMethod = QString::fromStdString(currentUser->getEncryptionMethod());
     qDebug() << "settings display" + currentUser->getEncryptionMethod();
     QString regenDuration = QString::fromStdString(currentUser->getRegenDuration());
 
+    //get the last key changed
     time_t lastKeyChanged = currentUser->getLastKeyChanged();
     char buffer[100];
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", std::localtime(&lastKeyChanged));
     QString lastKeyChangedStr = QString::fromStdString(buffer);
 
+    //get the public key
     RSA_keys publicKeyPair = currentUser->getKeys();
     QString publicKey_n = QString::fromStdString(publicKeyPair.publicKey[0].get_str(16));
     QString publicKey_e = QString::fromStdString(publicKeyPair.publicKey[1].get_str(16));
 
+    //build html labels, bolded and underlined
     QLabel* encryptionMethodLabel = new QLabel("<b><u>Encryption Method:</u></b><br>");
     QLabel* regenDurationLabel = new QLabel("<b><u>Key Regeneration Period:</u></b><br>");
     QLabel* lastKeyChangedLabel = new QLabel("<b><u>Last Key Changed:</u></b><br>" + lastKeyChangedStr);
@@ -360,6 +387,7 @@ void MainWindow::buildSettingsDisplay(){
     lastKeyChangedLabel->setWordWrap(true);
     // publicKeyLabel->setWordWrap(true);
 
+    //add items to display
     QListWidgetItem* encryptionItem = new QListWidgetItem();
     ui->settingsDisplay->addItem(encryptionItem);
     ui->settingsDisplay->addItem(encryptionMethod);
@@ -392,33 +420,39 @@ void MainWindow::buildSettingsDisplay(){
 
 /* SETTINGS PAGE METHODS */
 void MainWindow::buildSettingsPage(){
+    //set default texts in settings page to user settings
     ui->settingsUsernameBox->setText(QString::fromStdString(currentUser->getUsername()));
     ui->settingsPasswordBox->setText(QString::fromStdString(currentUser->getPassword()));
     ui->methodDropdown->setCurrentText(QString::fromStdString(currentUser->getEncryptionMethod()));
     ui->regenDurationDropdown->setCurrentText(QString::fromStdString(currentUser->getRegenDuration()));
 }
 void MainWindow::changeUsername(){
+    //when the user hits change username, allow them to edit the field
     ui->settingsUsernameBox->setReadOnly(false);
     ui->settingsUsernameBox->setFocus();
-    settingsChange();
+    settingsChange(); //call settings change
 }
 void MainWindow::changePassword(){
+    //when user hits change password, allow them to edit the field
     ui->settingsPasswordBox->setReadOnly(false);
     ui->settingsPasswordBox->setFocus();
-    settingsChange();
+    settingsChange(); //call settings change
 }
 void MainWindow::settingsChange(){
+    //sets the colour of the button to red to notify user a change has been made
     ui->saveChanges->setStyleSheet("QPushButton { background-color: red; color: white; }");
 }
 void MainWindow::saveChanges() {
-    ui->saveChanges->setStyleSheet("");
+    ui->saveChanges->setStyleSheet(""); //reset colour of save changes button
 
+    //get all the parameters
     QString oldUsername = QString::fromStdString(currentUser->getUsername());
     QString newUsername = ui->settingsUsernameBox->text();
     QString password = ui->settingsPasswordBox->text();
     QString encryptionMethod = ui->methodDropdown->currentText();
     QString regenDuration = ui->regenDurationDropdown->currentText();
 
+    //build the json object
     QJsonObject json;
     json["oldUsername"] = oldUsername;
     json["newUsername"] = newUsername;
@@ -429,6 +463,7 @@ void MainWindow::saveChanges() {
     QJsonDocument jsonDoc(json);
     QByteArray jsonData = jsonDoc.toJson();
 
+    //make the api call
     QUrl url("http://127.0.0.1:8000/update-settings");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -437,8 +472,10 @@ void MainWindow::saveChanges() {
 
     QNetworkReply *reply = manager->post(request, jsonData);
 
+    //on reply from api...
     connect(reply, &QNetworkReply::finished, [this, reply]() {
         if (reply->error() == QNetworkReply::NoError) {
+            //if success, update all user info accordingly to new info
             QMessageBox::information(this, "Success", "User settings updated successfully.");
             qDebug() << "settings saved" + ui->methodDropdown->currentText().toStdString();
             currentUser->setUsername(ui->settingsUsernameBox->text().toStdString());
@@ -446,6 +483,7 @@ void MainWindow::saveChanges() {
             currentUser->setEncryptionMethod(ui->methodDropdown->currentText().toStdString());
             currentUser->setRegenDuration(ui->regenDurationDropdown->currentText().toStdString());
         } else {
+            //if failed, notify user
             QString errorMessage = reply->errorString();
             QMessageBox::critical(this, "Error", "Failed to update user settings: " + errorMessage);
         }
@@ -460,23 +498,25 @@ void MainWindow::saveChanges() {
 
 /* CONTACT METHODS */
 void MainWindow::buildContactList(){
-
+    //create a container and layout to format the contacts list
     QWidget *container = ui->scrollArea->widget();
     QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(container->layout());
 
     if (!layout) {
         layout = new QVBoxLayout(container);
-        layout->setAlignment(Qt::AlignTop);
+        layout->setAlignment(Qt::AlignTop); //align contacts top to bottom
         container->setLayout(layout);
     }
 
+    //build a list to iterate over and get list
     QList<User::Contact> contactsList = currentUser->getContactsList(QString::fromStdString(currentUser->getUsername()));
 
+    //iterate over the list and build a button with the text as the contacts username
     for (int i = 0; i < contactsList.size(); ++i) {
         QPushButton *button = new QPushButton(contactsList[i].name, container);
         layout->addWidget(button);
 
-        // connect to insert name into receiver field when clicked
+        // connect to insert name into receiver field when clicked and clear the notifcation badge
         QObject::connect(button, &QPushButton::clicked, this, [this, button, name = contactsList[i].name]() {
             clearNotificationBadge(button);
             insertReceiver(name);
@@ -484,9 +524,11 @@ void MainWindow::buildContactList(){
     }
 }
 void MainWindow::addContactToList(QString name){
+    //create a container and layout to format the contacts list
     QWidget *container = ui->scrollArea->widget();
     QVBoxLayout *layout = qobject_cast<QVBoxLayout *>(container->layout());
 
+    //create a new button
     QPushButton *button = new QPushButton(name, container);
     layout->addWidget(button);
 
@@ -496,16 +538,21 @@ void MainWindow::addContactToList(QString name){
     });
 }
 void MainWindow::addContact() {
+    //new dialog window to popup
     QDialog *dialog = new QDialog(this);
     dialog->setWindowTitle("Add Contact");
 
+    //contact name to be entered
     QLineEdit *contactUsernameInput = new QLineEdit(dialog);
     contactUsernameInput->setPlaceholderText("Enter username to add");
 
+    //button to add entered name
     QPushButton *addButton = new QPushButton("Add", dialog);
 
+    //cancel button
     QPushButton *cancelButton = new QPushButton("Cancel", dialog);
 
+    //add elements
     QVBoxLayout *layout = new QVBoxLayout(dialog);
     layout->addWidget(contactUsernameInput);
     layout->addWidget(addButton);
@@ -518,10 +565,11 @@ void MainWindow::addContact() {
     connect(addButton, &QPushButton::clicked, this, [this, dialog, contactUsernameInput]() {
         QString contactUsername = contactUsernameInput->text();
 
+        //if the user didnt enter a username
         if (contactUsername.isEmpty()) {
             QMessageBox::critical(this, "Error", "Please enter a username.");
         } else {
-            checkContact(contactUsernameInput);
+            checkContact(contactUsernameInput); //check if the user actually exists
         }
 
         dialog->accept();
@@ -530,47 +578,54 @@ void MainWindow::addContact() {
     dialog->exec();
 }
 void MainWindow::checkContact(QLineEdit *contactUsernameInput) {
-    QString contactName = contactUsernameInput->text();
+    QString contactName = contactUsernameInput->text(); //get the username
     qDebug() << contactName;
 
+    //call addContact which makes api call
     if(currentUser->addContact(QString::fromStdString(currentUser->getUsername()), contactName)){
-        addContactToList(contactName);
+        addContactToList(contactName); // if success, add it to the display and list
     }
 }
 void MainWindow::insertReceiver(QString name){
+    //clear if anything is there and reset the name
     ui->messageDisplay->clear();
     ui->receiverInput->setText(name);
 
+    //find the chatroom
     Chatroom* chatroom = findChatroom(name.toStdString());
-    if(chatroom){
+    if(chatroom){ //if it exists, set current chatroom to it and switch to it
         currentChatroom = chatroom;
         switchToChatroom(name.toStdString());
-    } else {
+    } else { //if doesnt exist, create new one
         createChatroom(name.toStdString());
     }
 
 }
 void MainWindow::notificationReceived(QString user) {
+    //get the scroll area where the contacts are
     QWidget *scrollAreaWidget = ui->scrollArea->widget();
-    if (!scrollAreaWidget) return;
+    if (!scrollAreaWidget) return; //if an issue return
 
+    //get the contact buttons
     QList<QPushButton *> buttons = scrollAreaWidget->findChildren<QPushButton *>();
-    bool userFound = false;
+    bool userFound = false; //flah for if contact is found
 
+    //loop through buttons and add a notification to that button
     for (QPushButton *button : buttons) {
         if (button->text() == user) {
             addNotificationBadge(button, 1);
-            userFound = true;
+            userFound = true; //set flag to true
             break;
         }
     }
 
-    if (!userFound) {
-        currentUser->addRequest(user);
+    if (!userFound) { //if user isnt found, add notification to requests button
+        currentUser->addRequest(user); //add request to the users request list
         addNotificationBadge(ui->toolButton, 1);
     }
 }
 void MainWindow::addNotificationBadge(QWidget *widget, int notificationCount) {
+    //create a style for the badge label
     QLabel *badgeLabel = new QLabel(widget);
     badgeLabel->setText(QString::number(notificationCount));
     badgeLabel->setStyleSheet("background-color: red; color: white; "
@@ -591,21 +646,25 @@ void MainWindow::clearNotificationBadge(QWidget *widget) {
     }
 }
 void MainWindow::friendRequest() {
+    //get the requests from the users list
     QList<QString> requestList = currentUser->getRequests();
-    if (requestList.isEmpty()) {
+    if (requestList.isEmpty()) { //if empty tell user
         QMessageBox::information(this, "Friend Requests", "No friend requests at the moment.");
         return;
     }
 
+    //otherwise, create a new dialog pop up
     QDialog *dialog = new QDialog(this);
     dialog->setWindowTitle("Friend Requests");
     QVBoxLayout *layout = new QVBoxLayout(dialog);
 
     QMap<QString, QHBoxLayout*> requestLayouts;
 
+    //loop through requests
     for (const auto& request : requestList) {
         QHBoxLayout *requestLayout = new QHBoxLayout();
 
+        //create labels and buttons necessary
         QLabel *nameLabel = new QLabel(request, dialog);
         requestLayout->addWidget(nameLabel);
 
@@ -618,36 +677,38 @@ void MainWindow::friendRequest() {
         layout->addLayout(requestLayout);
         requestLayouts[request] = requestLayout;
 
+        //when the user clicks to accept
         connect(addButton, &QPushButton::clicked, [this, dialog, &requestList, &requestLayouts, request, layout]() {
-            currentUser->addContact(QString::fromStdString(currentUser->getUsername()), request);
-            QMessageBox::information(dialog, "Friend Added", request + " has been added as a friend.");
+            currentUser->addContact(QString::fromStdString(currentUser->getUsername()), request); //add the contact
+            QMessageBox::information(dialog, "Friend Added", request + " has been added as a friend."); //notify user they added the contact
 
-            requestList.removeOne(request);
+            requestList.removeOne(request); //remove the request from the request list since its been accepted now
             delete requestLayouts[request];
             requestLayouts.remove(request);
-            addContactToList(request);
+            addContactToList(request); // add contact to contacts list
 
-            if (requestList.isEmpty()) {
+            if (requestList.isEmpty()) { //if empty, dont display pop up
                 dialog->accept();
             }
         });
 
+        //when the user clicks to decline
         connect(declineButton, &QPushButton::clicked, [dialog, &requestList, &requestLayouts, request, layout]() {
-            QMessageBox::information(dialog, "Friend Declined", request + "'s request has been declined.");
+            QMessageBox::information(dialog, "Friend Declined", request + "'s request has been declined."); //notify user they declined
 
-            requestList.removeOne(request);
+            requestList.removeOne(request); //remove the request
             delete requestLayouts[request];
             requestLayouts.remove(request);
 
-            if (requestList.isEmpty()) {
+            if (requestList.isEmpty()) { //if empty, dont display popup
                 dialog->accept();
             }
         });
 
-        currentUser->removeRequest(request);
+        currentUser->removeRequest(request); //remove the request regardless of if they hit accept or decline
     }
 
-    clearNotificationBadge(ui->toolButton);
+    clearNotificationBadge(ui->toolButton); //clear the notifcation badge requests tab
 
     dialog->setLayout(layout);
     dialog->exec();
@@ -655,31 +716,33 @@ void MainWindow::friendRequest() {
 
 /* CHATROOM METHODS */
 Chatroom* MainWindow::findChatroom(const std::string& name) {
+    //loop through chatrooms and return if found
     for (auto& chatroom : chatrooms) {
         if (chatroom.getName() == name) {
             return &chatroom;
         }
     }
-    return nullptr;
+    return nullptr; //if not found reutnr null
 }
 void MainWindow::createChatroom(const std::string& name) {
-    if (!findChatroom(name)) {
+    if (!findChatroom(name)) { //if chatroom does not already exist
         chatrooms.emplace_back(name);
     }
 }
 void MainWindow::switchToChatroom(const std::string& chatroomName) {
-    Chatroom* chatroom = findChatroom(chatroomName);
+    Chatroom* chatroom = findChatroom(chatroomName); //find the chatroom
     if (!chatroom) {
-        QMessageBox::critical(this, "Error", "Chatroom not found.");
+        QMessageBox::critical(this, "Error", "Chatroom not found."); //if it doesnt exist, notify user
         return;
     }
 
-    ui->messageDisplay->clear();
-    const auto& messages = chatroom->getChatLog();
+    ui->messageDisplay->clear(); //clear the message display
+    const auto& messages = chatroom->getChatLog(); //get the chatlogs
 
     QTextCursor cursor = ui->messageDisplay->textCursor();
     QTextBlockFormat blockFormat = cursor.blockFormat();
 
+    //create tab format for timestamps
     QList<QTextOption::Tab> tabPositions;
     QTextOption::Tab rightTab;
     rightTab.type = QTextOption::RightTab;
@@ -689,21 +752,27 @@ void MainWindow::switchToChatroom(const std::string& chatroomName) {
     blockFormat.setTabPositions(tabPositions);
     cursor.setBlockFormat(blockFormat);
 
+    //loop through chatlog we got above
     for (const auto& msg : messages) {
+        //get the user info and content
         QString user = QString::fromStdString(msg.getSender().getUsername());
         QString content = QString::fromStdString(msg.getContent());
 
+        //get the timestamp
         time_t tempTimestamp = msg.getTimestamp();
         QString timestamp = QString::fromStdString(std::string(std::ctime(&tempTimestamp))).trimmed();
 
+        //display the user name in yellow
         QTextCharFormat userFormat;
         userFormat.setForeground(Qt::yellow);
         cursor.insertText(user + ": ", userFormat);
 
+        //display the message in white
         QTextCharFormat messageFormat;
         messageFormat.setForeground(Qt::white);
         cursor.insertText(content, messageFormat);
 
+        //tab over and display the timestamp in gray
         cursor.insertText("\t");
         QTextCharFormat timestampFormat;
         timestampFormat.setForeground(Qt::gray);

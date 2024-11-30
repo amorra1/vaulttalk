@@ -33,7 +33,7 @@ time_t Message::getTimestamp() const {
 }
 
 string Message::getEncryptedContent(const User &user) const {
-    string method = user.getEncryptionMethod();
+    string method = user.getEncryptionMethod(); //get the users encryption method
     string encryptedString = this->content;
 
     if (method == "RSA") {
@@ -194,6 +194,7 @@ string Message::getDecryptedContent(const User &user) const {
     }
     return decryptedMessage;
 }
+//used for debugging
 void Message::displayMessage() const {
     cout << "From: " << sender.getUsername()
     << ", Timestamp: " << ctime(&timestamp)
