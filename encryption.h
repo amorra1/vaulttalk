@@ -45,7 +45,7 @@ std::string generateAESKey();
 std::string ROT13Encrypt(std::string message);
 std::string ROT13Decrypt(std::string message);
 //Function definitions for Ceaser Cipher
-/*std::string CeaserEncrypt(std::string message);
+std::string CeaserEncrypt(std::string message, int shift);
 std::string CeaserDecrypt(std::string message);
 //Function definitions for ELEC377*/
 std::string ELEC376Encrypt(std::string message);

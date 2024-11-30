@@ -6,7 +6,9 @@
 #include <sstream>
 #include <iomanip>
 #include <random>
+#include <string>
 #include "encryption.h"
+
 
 using namespace encryption;
 
@@ -795,12 +797,42 @@ std::string encryption::ROT13Decrypt(std::string message){
 }
 
 //Function definitions for Ceaser Cipher
-//std::string CeaserEncrypt(std::string message);
+std::string CeaserEncrypt(std::string message, int shift){
+    //Initializing a return string and wrapCharacter to allow us to correctly shift characters.
+    std::string encryptedInput;
+    char wrapCharacter;
+    //Prepending the shift amount for decryption
+    encryptedInput.append(std::to_string(shift));
+    //Looping through each character in the input string
+    for (char currentLetter : message) {
+        //If the current character is a letter we shift it
+        if (std::isalpha(currentLetter)) {
+            //If the current letter is lowercase, we use a lower case wrapper
+            if(islower(currentLetter)){
+                wrapCharacter = 'a';
+            }
+            //If the current letter is uppercase, we use an upper case wrapper
+            else{
+                wrapCharacter = 'A';
+            }
+            //Shifting the character
+            char shiftedCharacter = (currentLetter - wrapCharacter + shift + 26) % 26 + wrapCharacter;
+            //Appending the character
+            encryptedInput += shiftedCharacter;
+        }
+        //If the character is not a letter it is not shifted
+        else {
+            encryptedInput += currentLetter;
+        }
+    }
+    //Returning the encrypted input
+    return encryptedInput;
+}
 //std::string CeaserDecrypt(std::string message);
 //Function definitions for ELEC376
 std::string encryption::ELEC376Encrypt(std::string message){
-    std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ";
-    std::string key = "XZNLWEBGJHQDYVTKFUOMPCIASRxznlwebgjhqdyvtkfuompciasr ";
+    std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 12356780";
+    std::string key = "XZ1NLWEBG2JHQDY3VTK0FUO4MPCIASR5xznlwebgjh6qd7yvtkf8uompcias9r ";
     std::string encryptedInput;
     //Looping through every character of the input string
     for(size_t i = 0; i<message.length(); i++){
