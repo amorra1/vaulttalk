@@ -4,6 +4,8 @@
 #include <math.h>
 #include <chrono>
 #include <sstream>
+#include <iomanip>
+#include <random>
 #include "encryption.h"
 
 using namespace encryption;
@@ -467,6 +469,29 @@ void encryption::KeyExpansion(unsigned char inputKey[16], unsigned char expanded
         }
 
     }
+}
+
+std::string encryption::generateAESKey() {
+    constexpr int keyLength = 16; // 128 bits = 16 bytes
+    unsigned char key[keyLength];
+
+    // Use a random device for better randomness
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::uniform_int_distribution<int> distribution(0, 255);
+
+    // Fill the key with random bytes
+    for (int i = 0; i < keyLength; ++i) {
+        key[i] = static_cast<unsigned char>(distribution(generator));
+    }
+
+    // Convert the key to a hexadecimal string
+    std::ostringstream hexKey;
+    for (int i = 0; i < keyLength; ++i) {
+        hexKey << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(key[i]);
+    }
+
+    return hexKey.str();
 }
 
 // This function removes null bytes from message byte array

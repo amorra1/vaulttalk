@@ -39,6 +39,8 @@ void removePadding(unsigned char * message, int &length);
 //Expands the AES key
 void KeyExpansion(unsigned char inputKey[16], unsigned char expandedKeys[176]);
 
+std::string generateAESKey();
+
 //Function definitions for ROT13
 std::string ROT13Encrypt(std::string message);
 std::string ROT13Decrypt(std::string message);

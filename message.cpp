@@ -5,9 +5,11 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
 using namespace std;
 
+std::vector<unsigned char> AES_encrypted_binary;
 
 //constructor
 Message::Message(const User &from, const string &msgContent)
@@ -36,76 +38,64 @@ string Message::getEncryptedContent(const User &user) const {
     string method = user.getEncryptionMethod();
     string encryptedString = this->content;
 
+    cout << "Message before encrypting: " << encryptedString << endl;
+
     if (method == "RSA") {
         mpz_class encrypted = encryption::RSA_Encrypt(this->content, user.getKeys());
         encryptedString = encrypted.get_str(10);
     } else if (method == "AES") {
-        // AES encryption logic
-        std::vector<unsigned char> messageBuffer(this->content.begin(), this->content.end());
-        messageBuffer.push_back('\0'); // Null-terminate for safety
+        // Calculate the length of the original message
+        int originalLen = encryptedString.length();
 
-        unsigned char* message = messageBuffer.data();
-        int originalLen = messageBuffer.size() - 1; // Size minus null-terminator
-        size_t paddedMessageLen = (originalLen % 16 == 0) ? originalLen : (originalLen / 16 + 1) * 16;
+        // Calculate the length of the padded message
+        int paddedMessageLen = (originalLen % 16 == 0) ? originalLen : (originalLen / 16 + 1) * 16;
 
-        // Create padded and encrypted message buffers
-        unsigned char* paddedMessage = new unsigned char[paddedMessageLen];
-        unsigned char* encryptedMessage = new unsigned char[paddedMessageLen];
-
-        // Pad the message
-        for (size_t i = 0; i < paddedMessageLen; i++) {
-            paddedMessage[i] = (i < originalLen) ? message[i] : 0x00;
+        // Create an array to store the padded message
+        unsigned char * paddedMessage = new unsigned char[paddedMessageLen];
+        for (int i = 0; i < paddedMessageLen; i++) {
+            paddedMessage[i] = (i < originalLen) ? static_cast<unsigned char>(encryptedString[i]) : 0x00;
         }
 
-        // Read AES key from file
-        string str;
-        ifstream infile("./aes_keyfile", ios::in | ios::binary);
-        if (!infile) {
-            qDebug() << "Error: Unable to open aes_keyfile. Ensure the file exists in the working directory.";
-            delete[] paddedMessage;
-            delete[] encryptedMessage;
-            return encryptedString; // Return unencrypted content
+        // Create an array to store the encrypted message
+        unsigned char * encryptedMessage = new unsigned char[paddedMessageLen];
+
+        string AESKey = encryption::generateAESKey(); // Store the key in the instance
+        if (AESKey.empty()) {
+            cerr << "Error: Failed to generate AES Key!" << endl;
         }
+        cout << "Debug: this->AESKey after generation: " << AESKey << endl;
 
-        getline(infile, str);
-        infile.close();
-
-        // Debugging: Print the content of the key file
-        cout << "Key file content: " << str << endl;
-
-        unsigned char AES_key[16];
-        istringstream hex_chars_stream(str);
-        unsigned int c;
+        // Convert the string to a 16-byte array
+        istringstream hex_chars_stream(AESKey);
+        unsigned char key[16];
         int i = 0;
+        unsigned int c;
         while (hex_chars_stream >> hex >> c) {
-            if (i >= 16) {
-                qDebug() << "Error: Key file contains more than 16 bytes. Ensure the key is valid.";
-                delete[] paddedMessage;
-                delete[] encryptedMessage;
-                return encryptedString;
-            }
-            AES_key[i] = c;
+            key[i] = c;
             i++;
-        }
-
-        if (i < 16) {
-            qDebug() << "Error: Key file contains fewer than 16 bytes. Ensure the key is valid.";
-            delete[] paddedMessage;
-            delete[] encryptedMessage;
-            return encryptedString;
         }
 
         // Expand the 16-byte key to a 176-byte key
         unsigned char expandedKey[176];
-        encryption::KeyExpansion(AES_key, expandedKey);
+        encryption::KeyExpansion(key, expandedKey);
 
         // Encrypt the message in 16-byte blocks
-        for (size_t i = 0; i < paddedMessageLen; i += 16) {
+        for (int i = 0; i < paddedMessageLen; i += 16) {
             encryption::AESEncrypt(paddedMessage + i, expandedKey, encryptedMessage + i);
+
+            // Append the encrypted block to the global variable
+            AES_encrypted_binary.insert(AES_encrypted_binary.end(), encryptedMessage + i, encryptedMessage + i + 16);
         }
 
-        // Convert the encrypted message to a string
-        encryptedString = std::string(reinterpret_cast<char*>(encryptedMessage), paddedMessageLen);
+        std::ostringstream hexStream;
+        for (int i = 0; i < paddedMessageLen; i++) {
+            hexStream << hex << std::setfill('0') << std::setw(2) << (int) encryptedMessage[i];
+        }
+
+        // Convert the stream to a string
+        encryptedString = hexStream.str();
+
+        cout << "this is the encrypted string: " << encryptedString << endl;
 
         // Clean up allocated memory
         delete[] paddedMessage;
@@ -128,40 +118,63 @@ string Message::getDecryptedContent(const User &user) const {
         decryptedMessage = encryption::RSA_Decrypt(encryptedContent, user.getKeys());
     } else if (method == "AES") {
         // Read AES key from file
-        string str;
-        ifstream infile("./aes_keyfile", ios::in | ios::binary);
+        string key;
+        ifstream infile("aes_keyfile.txt", ios::in | ios::binary);
         if (!infile) {
             qDebug() << "Error: Unable to open aes_keyfile. Ensure the file exists in the working directory.";
             return decryptedMessage;
         }
 
-        getline(infile, str);
+        getline(infile, key);
         infile.close();
 
-        // Debugging: Print the content of the key file
-        // cout << "Key file content: " << str << endl;
 
-        unsigned char AES_key[16];
-        istringstream hex_chars_stream(str);
-        unsigned int c;
+        // Debugging: Print the content of the key file
+        cout << "Key file content: " << key << endl;
+
+        // unsigned char AES_key[16];
+        // istringstream hex_chars_stream(str);
+        // unsigned int c;
+        // int i = 0;
+        // while (hex_chars_stream >> hex >> c) {
+        //     if (i >= 16) {
+        //         qDebug() << "Error: Key file contains more than 16 bytes. Ensure the key is valid.";
+        //         return decryptedMessage;
+        //     }
+        //     AES_key[i] = c;
+        //     i++;
+        // }
+
+        // if (i < 16) {
+        //     qDebug() << "Error: Key file contains fewer than 16 bytes. Ensure the key is valid.";
+        //     return decryptedMessage;
+        // }
+
+        // Convert the hexadecimal key to raw bytes
+        // unsigned char AES_key[16];
+        // for (int i = 0; i < 16; ++i) {
+        //     AES_key[i] = std::stoi(NewAESKey.substr(i * 2, 2), nullptr, 16);
+        // }
+
+        // // Expand the 16-byte key to a 176-byte key
+        // unsigned char expandedKey[176];
+        // encryption::KeyExpansion(AES_key, expandedKey);
+
+        // Convert the string to a 16-byte array
+        istringstream hex_chars_stream(key);
+        unsigned char aes_key[16];
         int i = 0;
+        unsigned int c;
         while (hex_chars_stream >> hex >> c) {
-            if (i >= 16) {
-                qDebug() << "Error: Key file contains more than 16 bytes. Ensure the key is valid.";
-                return decryptedMessage;
-            }
-            AES_key[i] = c;
+            aes_key[i] = c;
             i++;
         }
 
-        if (i < 16) {
-            qDebug() << "Error: Key file contains fewer than 16 bytes. Ensure the key is valid.";
-            return decryptedMessage;
-        }
+        cout << "Decryption key: " << aes_key << endl;
 
         // Expand the 16-byte key to a 176-byte key
         unsigned char expandedKey[176];
-        encryption::KeyExpansion(AES_key, expandedKey);
+        encryption::KeyExpansion(aes_key, expandedKey);
 
         // Decrypt the message in 16-byte blocks
         std::vector<unsigned char> encryptedBuffer(this->content.begin(), this->content.end());
@@ -169,7 +182,7 @@ string Message::getDecryptedContent(const User &user) const {
         std::vector<unsigned char> decryptedBuffer(paddedMessageLen, 0);
 
         for (size_t i = 0; i < paddedMessageLen; i += 16) {
-            encryption::AESDecrypt(encryptedBuffer.data() + i, expandedKey, decryptedBuffer.data() + i);
+            encryption::AESDecrypt(encryptedBuffer.data() + i , expandedKey, decryptedBuffer.data() + i);
         }
 
         // Remove padding
@@ -184,6 +197,8 @@ string Message::getDecryptedContent(const User &user) const {
         //Need to provide message string
         decryptedMessage = encryption::ROT13Decrypt(decryptedMessage);
     }
+
+    cout << "This is the decrypted message: " << decryptedMessage << endl;
     return decryptedMessage;
 }
 void Message::displayMessage() const {
