@@ -35,7 +35,7 @@ time_t Message::getTimestamp() const {
 }
 
 string Message::getEncryptedContent(const User &user) const {
-    string method = user.getEncryptionMethod();
+    string method = user.getEncryptionMethod(); //get the users encryption method
     string encryptedString = this->content;
 
     cout << "Message before encrypting: " << encryptedString << endl;
@@ -102,9 +102,13 @@ string Message::getEncryptedContent(const User &user) const {
         delete[] encryptedMessage;
     }
     //Encrypting using the ROT13 function in encryption
-    else if(method == "ROT13"){
+    else if(method == "ROT13") {
         //Need to provide message string
         encryptedString = encryption::ROT13Encrypt(encryptedString);
+    }
+    else if(method == "ELEC376 Cipher") {
+        //Need to provide message string
+        encryptedString = encryption::ELEC376Encrypt(encryptedString);
     }
     return encryptedString;
 }
@@ -197,10 +201,9 @@ string Message::getDecryptedContent(const User &user) const {
         //Need to provide message string
         decryptedMessage = encryption::ROT13Decrypt(decryptedMessage);
     }
-
-    cout << "This is the decrypted message: " << decryptedMessage << endl;
     return decryptedMessage;
 }
+//used for debugging
 void Message::displayMessage() const {
     cout << "From: " << sender.getUsername()
     << ", Timestamp: " << ctime(&timestamp)
