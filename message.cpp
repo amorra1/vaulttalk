@@ -1,5 +1,6 @@
 #include "message.h"
 #include "encryption.h"
+#include "mainwindow.h"
 #include <iostream>
 #include <cstring>
 #include <vector>
@@ -104,6 +105,10 @@ string Message::getEncryptedContent(const User &user) const {
         //Need to provide message string
         encryptedString = encryption::ELEC376Encrypt(encryptedString);
     }
+    else if(method == "Caesar Cipher") {
+        //Need to provide message string
+        encryptedString = encryption::CaesarEncrypt(encryptedString, 5);
+    }
 
     return encryptedString;
 }
@@ -199,6 +204,9 @@ string Message::getDecryptedContent(const User &user) const {
     else if(method == "ELEC376 Cipher"){
         //Need to provide message string
         decryptedMessage = encryption::ELEC376Decrypt(decryptedMessage);
+    }
+    else if(method == "Caesar Cipher"){
+        decryptedMessage = encryption::CaesarDecrypt(decryptedMessage);
     }
     return decryptedMessage;
 }
