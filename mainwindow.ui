@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="loginPage">
      <widget class="QPushButton" name="loginButton">
@@ -63,10 +63,10 @@
      <widget class="QLabel" name="titleLabel">
       <property name="geometry">
        <rect>
-        <x>350</x>
-        <y>160</y>
-        <width>201</width>
-        <height>71</height>
+        <x>200</x>
+        <y>30</y>
+        <width>481</width>
+        <height>211</height>
        </rect>
       </property>
       <property name="font">
@@ -76,7 +76,10 @@
        </font>
       </property>
       <property name="text">
-       <string>VaultTalk</string>
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>vaultTalk.png</pixmap>
       </property>
      </widget>
      <widget class="QCheckBox" name="rememberMeCheck">
@@ -313,10 +316,10 @@
      <widget class="QLabel" name="titleLabel_2">
       <property name="geometry">
        <rect>
-        <x>330</x>
-        <y>90</y>
-        <width>201</width>
-        <height>71</height>
+        <x>200</x>
+        <y>10</y>
+        <width>481</width>
+        <height>201</height>
        </rect>
       </property>
       <property name="font">
@@ -326,26 +329,10 @@
        </font>
       </property>
       <property name="text">
-       <string>VaultTalk</string>
+       <string/>
       </property>
-     </widget>
-     <widget class="QLabel" name="titleLabel_3">
-      <property name="geometry">
-       <rect>
-        <x>380</x>
-        <y>160</y>
-        <width>121</width>
-        <height>71</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>SWIsop2</family>
-        <pointsize>24</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Register</string>
+      <property name="pixmap">
+       <pixmap>vaultTalk.png</pixmap>
       </property>
      </widget>
      <widget class="QLineEdit" name="signUpUsernameInput">
