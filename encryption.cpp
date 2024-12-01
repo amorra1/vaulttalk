@@ -801,6 +801,9 @@ std::string CeaserEncrypt(std::string message, int shift){
     //Initializing a return string and wrapCharacter to allow us to correctly shift characters.
     std::string encryptedInput;
     char wrapCharacter;
+    if(shift < 10){
+        encryptedInput.append(std::to_string(0));
+    }
     //Prepending the shift amount for decryption
     encryptedInput.append(std::to_string(shift));
     //Looping through each character in the input string
@@ -828,7 +831,38 @@ std::string CeaserEncrypt(std::string message, int shift){
     //Returning the encrypted input
     return encryptedInput;
 }
-//std::string CeaserDecrypt(std::string message);
+std::string CeaserDecrypt(std::string message){
+    //Initializing a return string and splitting the message into substrings to allow decryption
+    std::string decryptedInput;
+    char wrapCharacter;
+    std::string shiftValue = message.substr(0, 2);
+    std::string encryptedMessage = message.substr(2);
+    //Converting the prepended integer into a integer variable type
+    int intShiftValue = std::stoi(shiftValue);
+    //Looping through the rest of the string to decrypt the message
+    for(char currentLetter : encryptedMessage){
+        if(std::isalpha(currentLetter)){
+            //If the current letter is lowercase, we use a lower case wrapper
+            if(islower(currentLetter)){
+                wrapCharacter = 'a';
+            }
+            //If the current letter is uppercase, we use an upper case wrapper
+            else{
+                wrapCharacter = 'A';
+            }
+            //Shifting the character
+            char shiftedCharacter = (currentLetter - wrapCharacter - shiftValue + 26) % 26 + wrapCharacter;
+            //Appending the character
+            decryptedInput += shiftedCharacter;
+        }
+        //If the character is not a letter it is not shifted
+        else {
+            decryptedInput += currentLetter;
+        }
+    }
+    //Returning the decryptedValue;
+    return decryptedInput;
+}
 //Function definitions for ELEC376
 std::string encryption::ELEC376Encrypt(std::string message){
     std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 12356780";
@@ -862,6 +896,3 @@ std::string encryption::ELEC376Decrypt(std::string message){
     return decryptedInput;
 }
 
-//Function definitions for Morse
-//std::string MorseEncrypt(std::string message);
-//std::string MorseDecrypt(std::string message);

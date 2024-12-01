@@ -49,10 +49,7 @@ std::string CeaserEncrypt(std::string message, int shift);
 std::string CeaserDecrypt(std::string message);
 //Function definitions for ELEC377*/
 std::string ELEC376Encrypt(std::string message);
-std::string ELEC376Decrypt(std::string message);/*
-//Function definitions for Morse
-std::string MorseEncrypt(std::string message);
-std::string MorseDecrypt(std::string message);*/
+std::string ELEC376Decrypt(std::string message);
 } // end namespace encryption
 
 #endif // ENCRYPTION_H
