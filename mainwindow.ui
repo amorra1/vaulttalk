@@ -19,12 +19,12 @@
      <rect>
       <x>-10</x>
       <y>0</y>
-      <width>901</width>
+      <width>911</width>
       <height>551</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="loginPage">
      <widget class="QPushButton" name="loginButton">
@@ -79,7 +79,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>vaultTalk.png</pixmap>
+       <pixmap resource="imageResources.qrc">:/vaultTalkLogo.png</pixmap>
       </property>
      </widget>
      <widget class="QCheckBox" name="rememberMeCheck">
@@ -316,10 +316,10 @@
      <widget class="QLabel" name="titleLabel_2">
       <property name="geometry">
        <rect>
-        <x>200</x>
-        <y>10</y>
-        <width>481</width>
-        <height>201</height>
+        <x>180</x>
+        <y>-40</y>
+        <width>521</width>
+        <height>331</height>
        </rect>
       </property>
       <property name="font">
@@ -332,7 +332,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>vaultTalk.png</pixmap>
+       <pixmap resource="imageResources.qrc">:/vaultTalkLogo.png</pixmap>
       </property>
      </widget>
      <widget class="QLineEdit" name="signUpUsernameInput">
@@ -391,6 +391,12 @@
        <string>Back to Login</string>
       </property>
      </widget>
+     <zorder>signUpUsernameInput</zorder>
+     <zorder>signUpPasswordInput</zorder>
+     <zorder>signUpConfirmPassusernameInput</zorder>
+     <zorder>registerButton</zorder>
+     <zorder>backToLoginButton</zorder>
+     <zorder>titleLabel_2</zorder>
     </widget>
     <widget class="QWidget" name="settingsPage">
      <widget class="QPushButton" name="homeButton">
@@ -693,6 +699,8 @@
    </widget>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="imageResources.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->stackedWidget->setCurrentIndex(0);
-
+    ui->stackedWidget->setStyleSheet("QStackedWidget { background-image: url(vaultTalkBackground.png); }");
     //login page
     ui->usernameInput->setPlaceholderText("Username");
     ui->passwordInput->setPlaceholderText("Password");

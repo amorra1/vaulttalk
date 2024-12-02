@@ -43,3 +43,6 @@ PRE_TARGETDEPS += $$PWD/gmp_compiled/lib/libgmp.a
 
 DISTFILES += \
     aes_keyfile
+
+RESOURCES += \
+    imageResources.qrc
