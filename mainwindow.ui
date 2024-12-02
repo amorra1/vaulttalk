@@ -391,12 +391,6 @@
        <string>Back to Login</string>
       </property>
      </widget>
-     <zorder>signUpUsernameInput</zorder>
-     <zorder>signUpPasswordInput</zorder>
-     <zorder>signUpConfirmPassusernameInput</zorder>
-     <zorder>registerButton</zorder>
-     <zorder>backToLoginButton</zorder>
-     <zorder>titleLabel_2</zorder>
     </widget>
     <widget class="QWidget" name="settingsPage">
      <widget class="QPushButton" name="homeButton">

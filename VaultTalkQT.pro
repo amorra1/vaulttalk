@@ -49,4 +49,5 @@ RESOURCES += \
     imageResources.qrc \
     imageResources.qrc \
     imageResources.qrc \
+    imageResources.qrc \
     resources.qrc
