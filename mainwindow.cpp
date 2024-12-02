@@ -70,6 +70,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->changePassword, &QPushButton::clicked, this, &MainWindow::changePassword);
     connect(ui->methodDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->regenDurationDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
+    connect(ui->caesarShiftDropdown, &QComboBox::currentIndexChanged, this, &MainWindow::settingsChange);
     connect(ui->saveChanges, &QPushButton::clicked, this, &MainWindow::saveChanges);
     connect(ui->addContact, &QPushButton::clicked, this, &MainWindow::addContact);
     connect(ui->toolButton, &QPushButton::clicked, this, &MainWindow::friendRequest);
