@@ -12,7 +12,7 @@ private:
     std::string name;
     mpz_class key;
     std::vector<User> members;
-    std::vector<Message> chatLog;
+    std::vector<Message> chatLog; //stores message objects that were sent
 
 public:
     Chatroom(const std::string& chatroomName);

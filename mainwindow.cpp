@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->stackedWidget->setCurrentIndex(0);
-    ui->stackedWidget->setStyleSheet("QStackedWidget { background-image: url(vaultTalkBackground.png); }");
+    ui->stackedWidget->setStyleSheet("QStackedWidget { background-color:rgb(81,90,130);}");
     //login page
     ui->usernameInput->setPlaceholderText("Username");
     ui->passwordInput->setPlaceholderText("Password");
@@ -484,6 +484,7 @@ void MainWindow::saveChanges() {
             currentUser->setPassword(currentUser->hashPassword(ui->settingsPasswordBox->text().toStdString()));
             currentUser->setEncryptionMethod(ui->methodDropdown->currentText().toStdString());
             currentUser->setRegenDuration(ui->regenDurationDropdown->currentText().toStdString());
+            currentUser->setCaeserShiftValue(ui->caesarShiftDropdown->currentText().toInt());
         } else {
             //if failed, notify user
             QString errorMessage = reply->errorString();

@@ -39,6 +39,7 @@ public:
     QList<Contact> getContactsList(const QString& username);
     bool addContact(const QString& username, const QString& contactName);
     time_t getLastKeyChanged() const;
+    int getCaeserShiftValue() const;
 
     void setUsername(std::string name);
     void setPassword(std::string password);
@@ -50,6 +51,7 @@ public:
     void removeRequest(QString user);
     QList<QString> getRequests() const;
     void setLastKeyChanged(time_t lastKeyChanged);
+    void setCaeserShiftValue(int value);
 
     static std::string hashPassword(const std::string &password);
 
@@ -70,6 +72,7 @@ private:
     std::string encryptionMethod;
     std::string regenDuration;
     RSA_keys RSAKeys;
+    int caeserShiftValue;
 
     time_t lastKeyChanged;
 };

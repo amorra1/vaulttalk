@@ -39,7 +39,7 @@ User::User(string username, string password, string method, string duration)
 
 // Constructor with username, password, and keys
 User::User(string username, string password, RSA_keys keys)
-    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never"), RSAKeys(keys), lastKeyChanged(std::time(nullptr)) {}
+    : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never"), RSAKeys(keys), lastKeyChanged(std::time(nullptr)), caeserShiftValue(1) {}
 
 User::User(string username, string encryptionMethod, string regenDuration, RSA_keys keys)
     : username(username), encryptionMethod(encryptionMethod), regenDuration(regenDuration), RSAKeys(keys) {}
@@ -98,6 +98,15 @@ void User::setPrivateKey(const mpz_class& n, const mpz_class& d) {
 
 RSA_keys User::getKeys() const {
     return this->RSAKeys;
+}
+
+// Getter and Setter for Caeser Shift Value
+int User::getCaeserShiftValue() const {
+    return this->caeserShiftValue;
+}
+
+void User::setCaeserShiftValue(int value){
+    this->caeserShiftValue = value;
 }
 
 void User::addRequest(QString user) {

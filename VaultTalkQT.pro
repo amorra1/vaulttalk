@@ -45,4 +45,8 @@ DISTFILES += \
     aes_keyfile
 
 RESOURCES += \
-    imageResources.qrc
+    imageResource.qrc \
+    imageResources.qrc \
+    imageResources.qrc \
+    imageResources.qrc \
+    resources.qrc

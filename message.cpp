@@ -39,7 +39,7 @@ string Message::getEncryptedContent(const User &user) const {
     string method = user.getEncryptionMethod(); //get the users encryption method
     string encryptedString = this->content;
 
-    cout << "Message before encrypting: " << encryptedString << endl;
+    // cout << "Message before encrypting: " << encryptedString << endl;
 
     if (method == "RSA") {
         mpz_class encrypted = encryption::RSA_Encrypt(this->content, user.getKeys());
@@ -107,6 +107,7 @@ string Message::getEncryptedContent(const User &user) const {
     }
     else if(method == "Caesar Cipher") {
         //Need to provide message string
+        qDebug() << user.getCaeserShiftValue();
         encryptedString = encryption::CaesarEncrypt(encryptedString, 5);
     }
 
