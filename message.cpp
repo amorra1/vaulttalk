@@ -107,8 +107,9 @@ string Message::getEncryptedContent(const User &user) const {
     }
     else if(method == "Caesar Cipher") {
         //Need to provide message string
+        qDebug() << "getting caeser value: ";
         qDebug() << user.getCaeserShiftValue();
-        encryptedString = encryption::CaesarEncrypt(encryptedString, 5);
+        encryptedString = encryption::CaesarEncrypt(encryptedString, user.getCaeserShiftValue());
     }
 
     return encryptedString;

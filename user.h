@@ -16,10 +16,11 @@ class User {
 public:
     User(); // Default constructor
     User(std::string username);
+    User(string username, int value);
     User(std::string username, std::string hashedPassword);
     User(std::string username, std::string hashedPassword, std::string method, std::string duration);
     User(std::string username, std::string hashedPassword, RSA_keys keys);
-    User(string username, string encryptionMethod, string regenDuration, RSA_keys keys);
+    User(string username, string encryptionMethod, string regenDuration, RSA_keys keys, int value);
 
     struct Contact {
         QString name;

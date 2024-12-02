@@ -23,26 +23,29 @@ struct Contact {
 };
 
 // Default constructor
-User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDuration(""){
+User::User() : username(""), hashedPassword(""), encryptionMethod(""), regenDuration(""), caeserShiftValue(1){
 }
 
 User::User(string username) : username(username), hashedPassword(""), encryptionMethod(""), regenDuration("") {
 }
 
+User::User(string username, int value) : username(username), hashedPassword(""), encryptionMethod(""), regenDuration(""), caeserShiftValue(value) {
+}
+
 // Constructor with username and password, default encryptionMethod and regenDuration
 User::User(string username, string password)
-    : username(username), hashedPassword(hashPassword(password)) {}
+    : username(username), hashedPassword(hashPassword(password)), caeserShiftValue(1) {}
 
 // Constructor with username, password, encryption method, and regeneration duration
 User::User(string username, string password, string method, string duration)
-    : username(username), hashedPassword(hashPassword(password)), encryptionMethod(method), regenDuration(duration) {}
+    : username(username), hashedPassword(hashPassword(password)), encryptionMethod(method), regenDuration(duration), caeserShiftValue(1) {}
 
 // Constructor with username, password, and keys
 User::User(string username, string password, RSA_keys keys)
     : username(username), hashedPassword(hashPassword(password)), encryptionMethod("RSA"), regenDuration("Never"), RSAKeys(keys), lastKeyChanged(std::time(nullptr)), caeserShiftValue(1) {}
 
-User::User(string username, string encryptionMethod, string regenDuration, RSA_keys keys)
-    : username(username), encryptionMethod(encryptionMethod), regenDuration(regenDuration), RSAKeys(keys) {}
+User::User(string username, string encryptionMethod, string regenDuration, RSA_keys keys, int value)
+    : username(username), encryptionMethod(encryptionMethod), regenDuration(regenDuration), RSAKeys(keys), caeserShiftValue(value) {}
 
 User::~User() {
     //strings are automatically cleaned in c++ when delete is used
@@ -102,11 +105,15 @@ RSA_keys User::getKeys() const {
 
 // Getter and Setter for Caeser Shift Value
 int User::getCaeserShiftValue() const {
+    qDebug() << "getting shift value: ";
+    qDebug() << this->caeserShiftValue;
     return this->caeserShiftValue;
 }
 
 void User::setCaeserShiftValue(int value){
     this->caeserShiftValue = value;
+    qDebug() << "inside setter";
+    qDebug() << this->caeserShiftValue;
 }
 
 void User::addRequest(QString user) {

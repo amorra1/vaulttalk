@@ -79,6 +79,7 @@ void networking::onConnected() {
     userJson["username"] = QString::fromStdString(user.getUsername());
     userJson["encryptionMethod"] = QString::fromStdString(user.getEncryptionMethod());
     userJson["regenDuration"] = QString::fromStdString(user.getRegenDuration());
+    userJson["caeserShiftValue"] = user.getCaeserShiftValue();
 
     RSA_keys publicKeyPair = user.getKeys();
 
@@ -121,13 +122,14 @@ void networking::onMessageReceived(const QString &message) {
     QJsonObject jsonObj = doc.object();
     QString sender = jsonObj["from"].toString();
     QString encryptedMessage = jsonObj["message"].toString();
+    int shiftValue = jsonObj["caeserShiftValue"].toInt();
 
     // additional check if empty info
     if (sender.isEmpty() || encryptedMessage.isEmpty()) {
         qDebug() << "Empty message or sender";
         return;
     }
-    User toUser = User(sender.toStdString());
+    User toUser = User(sender.toStdString(), shiftValue);
     Message toMessage = Message(toUser, encryptedMessage.toStdString());
 
     // try catch statement in case of error
@@ -210,11 +212,16 @@ User networking::getUser(const QString &username) {
         keys.publicKey[1] = e;
         keys.publicKey[0] = n;
 
+        int shiftValue;
+        shiftValue = responseJson["caeserShiftValue"].toInt();
+
         // cache the public key for future use
         cacheUserPublicKey(username, keys);
 
         // return the user with the public key
-        User requestedUser(username.toStdString(), encryptionMethod.toStdString(), regenDuration.toStdString(), keys);
+        User requestedUser(username.toStdString(), encryptionMethod.toStdString(), regenDuration.toStdString(), keys, shiftValue);
+        qDebug() << "-------------";
+        qDebug() << user.getCaeserShiftValue();
         return requestedUser;
 
     } else {
