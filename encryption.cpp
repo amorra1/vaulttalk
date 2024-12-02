@@ -797,7 +797,7 @@ std::string encryption::ROT13Decrypt(std::string message){
 }
 
 //Function definitions for Ceaser Cipher
-std::string CaesarEncrypt(std::string message, int shift){
+std::string encryption::CaesarEncrypt(std::string message, int shift){
     //Initializing a return string and wrapCharacter to allow us to correctly shift characters.
     std::string encryptedInput;
     char wrapCharacter;
@@ -831,7 +831,7 @@ std::string CaesarEncrypt(std::string message, int shift){
     //Returning the encrypted input
     return encryptedInput;
 }
-std::string CaesarDecrypt(std::string message){
+std::string encryption::CaesarDecrypt(std::string message){
     //Initializing a return string and splitting the message into substrings to allow decryption
     std::string decryptedInput;
     char wrapCharacter;
